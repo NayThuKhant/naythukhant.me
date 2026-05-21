@@ -1,4 +1,4 @@
-I<script setup lang="ts">
+<script setup lang="ts">
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const score    = ref(0)
 const lives    = ref(3)

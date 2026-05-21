@@ -17,7 +17,7 @@ useHead({
   <div class="min-h-screen flex flex-col text-slate-300 font-sans relative overflow-x-hidden">
     <SolarSystemBackground />
     <AppNavbar />
-    <main class="relative z-10 flex-1 pb-16 md:pb-0">
+    <main class="relative z-10 flex-1">
       <slot />
     </main>
     <AppFooter />

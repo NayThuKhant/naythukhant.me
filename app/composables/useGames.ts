@@ -3,9 +3,12 @@ import { ControlLayout } from '~/types'
 import {
   AsteroidDodge,
   BreakoutGame,
+  CosmicPong,
   FlappyRocket,
   Game2048,
   MemoryMatch,
+  MeteorCatcher,
+  NeonTetris,
   SnakeGame,
   SpaceInvaders,
 } from '#components'
@@ -18,6 +21,9 @@ export type GameSlug =
   | 'neon-snake'
   | '2048'
   | 'planet-memory'
+  | 'neon-tetris'
+  | 'cosmic-pong'
+  | 'meteor-catcher'
 
 export interface GameEntry {
   slug: GameSlug
@@ -55,7 +61,7 @@ export const games: GameEntry[] = [
     slug: 'flappy-rocket',
     id: 'FlappyRocket',
     name: 'Flappy Rocket',
-    desc: 'Boost your rocket through narrow gaps. One tap to fly — don\'t crash.',
+    desc: "Boost your rocket through narrow gaps. One tap to fly — don't crash.",
     genre: 'ONE-TAP',
     color: 'neon-purple',
     component: FlappyRocket,
@@ -75,7 +81,7 @@ export const games: GameEntry[] = [
     slug: 'neon-snake',
     id: 'SnakeGame',
     name: 'Neon Snake',
-    desc: 'Eat the glowing orbs and grow without hitting yourself. Speed builds up.',
+    desc: "Eat the glowing orbs and grow without hitting yourself. Speed builds up.",
     genre: 'CLASSIC',
     color: 'neon-emerald',
     component: SnakeGame,
@@ -101,10 +107,39 @@ export const games: GameEntry[] = [
     component: MemoryMatch,
     controls: ControlLayout.None,
   },
+  {
+    slug: 'neon-tetris',
+    id: 'NeonTetris',
+    name: 'Neon Tetris',
+    desc: 'Stack neon tetrominoes and clear lines before the stack reaches the top.',
+    genre: 'CLASSIC',
+    color: 'neon-blue',
+    component: NeonTetris,
+    controls: ControlLayout.Dpad,
+  },
+  {
+    slug: 'cosmic-pong',
+    id: 'CosmicPong',
+    name: 'Cosmic Pong',
+    desc: 'Face the CPU in a neon pong duel. First to 7 wins. Speed up or lose.',
+    genre: 'ARCADE',
+    color: 'neon-pink',
+    component: CosmicPong,
+    controls: ControlLayout.UpDown,
+  },
+  {
+    slug: 'meteor-catcher',
+    id: 'MeteorCatcher',
+    name: 'Meteor Catcher',
+    desc: 'Tap the falling meteors before they hit the ground. How long can you last?',
+    genre: 'CASUAL',
+    color: 'neon-emerald',
+    component: MeteorCatcher,
+    controls: ControlLayout.None,
+  },
 ]
 
 export const useGames = () => {
   const getGameBySlug = (slug: string) => games.find(game => game.slug === slug) ?? null
   return { games, getGameBySlug }
 }
-

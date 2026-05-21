@@ -5,6 +5,7 @@ export enum ControlLayout {
   Lr     = 'lr',
   Tap    = 'tap',
   Dpad   = 'dpad',
+  UpDown = 'up-down',
   None   = 'none',
 }
 

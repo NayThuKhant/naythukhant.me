@@ -3,26 +3,17 @@ const { scrollFadeUp } = useAnimations()
 const route = useRoute()
 const router = useRouter()
 
-const { data: projects } = await useAsyncData('all-projects', () =>
-  queryCollection('projects').order('stem', 'ASC').all(),
-)
-
-const { data: page } = await useAsyncData('page-projects', () =>
-  queryCollection('pages').path(route.path).first(),
-)
+const { data, pending } = usePageLoad('projects-index', {
+  page: () => queryCollection('pages').path(route.path).first(),
+  projects: () => queryCollection('projects').order('stem', 'ASC').all(),
+})
 
 const activeTag = ref<string | null>((route.query.tag as string) || null)
-
-const pageTitle = computed(() => page.value?.title)
-const pageDescription = computed(() => page.value?.description)
-
-watch(activeTag, (val) => {
-  router.replace({ query: val ? { tag: val } : {} })
-})
+watch(activeTag, (val) => router.replace({ query: val ? { tag: val } : {} }))
 
 const allTags = computed(() => {
   const seen = new Set<string>()
-  for (const p of projects.value ?? []) {
+  for (const p of data.value.projects ?? []) {
     for (const t of p.tags ?? []) seen.add(t)
   }
   return [...seen].sort()
@@ -30,16 +21,15 @@ const allTags = computed(() => {
 
 const filtered = computed(() =>
   activeTag.value
-    ? (projects.value ?? []).filter(p => (p.tags ?? []).includes(activeTag.value as string))
-    : (projects.value ?? []),
+    ? (data.value.projects ?? []).filter(p => (p.tags ?? []).includes(activeTag.value as string))
+    : (data.value.projects ?? [])
 )
 
 useSeoMeta({
-  ...page.value?.seo,
-  ogTitle: page.value?.title,
-  ogDescription: page.value?.description,
-  twitterTitle: page.value?.title,
-  twitterDescription: page.value?.description,
+  title: computed(() => data.value.page?.title ?? ''),
+  description: computed(() => data.value.page?.description ?? ''),
+  ogTitle: computed(() => data.value.page?.title ?? ''),
+  ogDescription: computed(() => data.value.page?.description ?? ''),
   twitterCard: 'summary_large_image',
 })
 </script>
@@ -55,42 +45,41 @@ useSeoMeta({
         class="mb-12"
       >
         <p class="hud-label mb-3">MISSION LOG</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ pageTitle }}</h1>
-        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          {{ pageDescription }}
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ data.page?.title }}</h1>
+        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ data.page?.description }}</p>
+      </div>
+
+      <LoadingSpinner v-if="pending" />
+
+      <template v-else>
+        <!-- Tag filter -->
+        <div v-if="allTags.length" class="flex flex-wrap gap-2 mb-10">
+          <button
+            class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
+            :class="activeTag === null
+              ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
+              : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
+            @click="activeTag = null"
+          >ALL</button>
+          <button
+            v-for="tag in allTags"
+            :key="tag"
+            class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
+            :class="activeTag === tag
+              ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
+              : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
+            @click="activeTag = tag"
+          >#{{ tag }}</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <ProjectCard v-for="project in filtered" :key="project.path" :project="project" />
+        </div>
+
+        <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
+          No projects for <span class="text-neon-blue">#{{ activeTag }}</span> yet.
         </p>
-      </div>
-
-      <!-- Tag filter -->
-      <div
-        v-if="allTags.length"
-        class="flex flex-wrap gap-2 mb-10"
-      >
-        <button
-          class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeTag === null
-            ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
-            : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeTag = null"
-        >ALL</button>
-        <button
-          v-for="tag in allTags"
-          :key="tag"
-          class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeTag === tag
-            ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
-            : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeTag = tag"
-        >#{{ tag }}</button>
-      </div>
-
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <ProjectCard v-for="project in filtered" :key="project.path" :project="project" />
-      </div>
-
-      <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
-        No projects for <span class="text-neon-blue">#{{ activeTag }}</span> yet.
-      </p>
+      </template>
     </div>
   </div>
 </template>

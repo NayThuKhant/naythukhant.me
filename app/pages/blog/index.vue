@@ -3,26 +3,17 @@ const { scrollFadeUp } = useAnimations()
 const route = useRoute()
 const router = useRouter()
 
-const { data: posts } = await useAsyncData('all-posts', () =>
-  queryCollection('blog').order('stem', 'ASC').all(),
-)
-
-const { data: page } = await useAsyncData('page-blog', () =>
-  queryCollection('pages').path(route.path).first(),
-)
+const { data, pending } = usePageLoad('blog-index', {
+  page: () => queryCollection('pages').path(route.path).first(),
+  posts: () => queryCollection('blog').order('stem', 'ASC').all(),
+})
 
 const activeTag = ref<string | null>((route.query.tag as string) || null)
-
-const pageTitle = computed(() => page.value?.title)
-const pageDescription = computed(() => page.value?.description)
-
-watch(activeTag, (val) => {
-  router.replace({ query: val ? { tag: val } : {} })
-})
+watch(activeTag, (val) => router.replace({ query: val ? { tag: val } : {} }))
 
 const allTags = computed(() => {
   const seen = new Set<string>()
-  for (const post of posts.value ?? []) {
+  for (const post of data.value.posts ?? []) {
     for (const tag of post.tags ?? []) seen.add(tag)
   }
   return [...seen].sort()
@@ -30,16 +21,15 @@ const allTags = computed(() => {
 
 const filtered = computed(() =>
   activeTag.value
-    ? (posts.value ?? []).filter(p => p.tags?.includes(activeTag.value!))
-    : (posts.value ?? []),
+    ? (data.value.posts ?? []).filter(p => p.tags?.includes(activeTag.value!))
+    : (data.value.posts ?? [])
 )
 
 useSeoMeta({
-  ...page.value?.seo,
-  ogTitle: page.value?.title,
-  ogDescription: page.value?.description,
-  twitterTitle: page.value?.title,
-  twitterDescription: page.value?.description,
+  title: computed(() => data.value.page?.title ?? ''),
+  description: computed(() => data.value.page?.description ?? ''),
+  ogTitle: computed(() => data.value.page?.title ?? ''),
+  ogDescription: computed(() => data.value.page?.description ?? ''),
   twitterCard: 'summary_large_image',
 })
 </script>
@@ -55,42 +45,41 @@ useSeoMeta({
         class="mb-12"
       >
         <p class="hud-label mb-3">TRANSMISSIONS</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ pageTitle }}</h1>
-        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          {{ pageDescription }}
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ data.page?.title }}</h1>
+        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ data.page?.description }}</p>
+      </div>
+
+      <LoadingSpinner v-if="pending" />
+
+      <template v-else>
+        <!-- Tag filter -->
+        <div v-if="allTags.length" class="flex flex-wrap gap-2 mb-10">
+          <button
+            class="px-3 py-1 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
+            :class="activeTag === null
+              ? 'bg-neon-purple/15 border-neon-purple/40 text-neon-purple'
+              : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
+            @click="activeTag = null"
+          >ALL</button>
+          <button
+            v-for="tag in allTags"
+            :key="tag"
+            class="px-3 py-1 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
+            :class="activeTag === tag
+              ? 'bg-neon-purple/15 border-neon-purple/40 text-neon-purple'
+              : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
+            @click="activeTag = tag"
+          >#{{ tag }}</button>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <PostCard v-for="post in filtered" :key="post.path" :post="post" />
+        </div>
+
+        <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
+          No posts found for <span class="text-neon-purple">#{{ activeTag }}</span>.
         </p>
-      </div>
-
-      <!-- Tag filter -->
-      <div
-        v-if="allTags.length"
-        class="flex flex-wrap gap-2 mb-10"
-      >
-        <button
-          class="px-3 py-1 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeTag === null
-            ? 'bg-neon-purple/15 border-neon-purple/40 text-neon-purple'
-            : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeTag = null"
-        >ALL</button>
-        <button
-          v-for="tag in allTags"
-          :key="tag"
-          class="px-3 py-1 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeTag === tag
-            ? 'bg-neon-purple/15 border-neon-purple/40 text-neon-purple'
-            : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeTag = tag"
-        >#{{ tag }}</button>
-      </div>
-
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <PostCard v-for="post in filtered" :key="post.path" :post="post" />
-      </div>
-
-      <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
-        No posts found for <span class="text-neon-purple">#{{ activeTag }}</span>.
-      </p>
+      </template>
     </div>
   </div>
 </template>

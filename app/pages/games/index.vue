@@ -3,19 +3,15 @@ const { scrollFadeUp, staggered } = useAnimations()
 const { games } = useGames()
 const route = useRoute()
 
-const { data: page } = await useAsyncData('page-games', () =>
-  queryCollection('pages').path(route.path).first(),
-)
-
-const pageTitle = computed(() => page.value?.title)
-const pageDescription = computed(() => page.value?.description)
+const { data, pending } = usePageLoad('page-games', {
+  page: () => queryCollection('pages').path(route.path).first(),
+})
 
 useSeoMeta({
-  ...page.value?.seo,
-  ogTitle: page.value?.title,
-  ogDescription: page.value?.description,
-  twitterTitle: page.value?.title,
-  twitterDescription: page.value?.description,
+  title: computed(() => data.value.page?.title ?? ''),
+  description: computed(() => data.value.page?.description ?? ''),
+  ogTitle: computed(() => data.value.page?.title ?? ''),
+  ogDescription: computed(() => data.value.page?.description ?? ''),
   twitterCard: 'summary_large_image',
 })
 </script>
@@ -31,13 +27,13 @@ useSeoMeta({
         class="mb-14"
       >
         <p class="hud-label mb-3">RECREATION MODULE</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ pageTitle }}</h1>
-        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          {{ pageDescription }}
-        </p>
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ data.page?.title }}</h1>
+        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ data.page?.description }}</p>
       </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <LoadingSpinner v-if="pending" />
+
+      <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div
           v-for="(game, i) in games"
           :key="game.id"
@@ -77,4 +73,3 @@ useSeoMeta({
     </div>
   </div>
 </template>
-

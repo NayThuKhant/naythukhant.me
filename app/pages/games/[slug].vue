@@ -18,25 +18,35 @@ useSeoMeta({
 
 const gameAreaRef = ref<HTMLElement | null>(null)
 const isFullscreen = ref(false)
+const isCssFullscreen = ref(false)
 
-function toggleFullscreen() {
-  if (!gameAreaRef.value) return
-  if (!document.fullscreenElement) {
-    gameAreaRef.value.requestFullscreen()
+async function toggleFullscreen() {
+  if (!isFullscreen.value) {
+    if (gameAreaRef.value?.requestFullscreen) {
+      try {
+        await gameAreaRef.value.requestFullscreen()
+        return
+      } catch {
+        // Native fullscreen rejected (iOS Safari) — fall through to CSS mode
+      }
+    }
+    isCssFullscreen.value = true
+    isFullscreen.value = true
   } else {
-    document.exitFullscreen()
+    if (document.fullscreenElement) document.exitFullscreen()
+    isCssFullscreen.value = false
+    isFullscreen.value = false
   }
 }
 
 onMounted(() => {
-  document.addEventListener('fullscreenchange', () => {
-    isFullscreen.value = !!document.fullscreenElement
-  })
-})
-onUnmounted(() => {
-  document.removeEventListener('fullscreenchange', () => {
-    isFullscreen.value = !!document.fullscreenElement
-  })
+  const onChange = () => {
+    const active = !!document.fullscreenElement
+    isFullscreen.value = active
+    if (!active) isCssFullscreen.value = false
+  }
+  document.addEventListener('fullscreenchange', onChange)
+  onUnmounted(() => document.removeEventListener('fullscreenchange', onChange))
 })
 </script>
 
@@ -60,11 +70,9 @@ onUnmounted(() => {
           class="inline-flex items-center gap-2 font-mono text-xs text-slate-500 hover:text-neon-blue transition-colors tracking-widest uppercase"
           @click="toggleFullscreen"
         >
-          <!-- Expand icon -->
           <svg v-if="!isFullscreen" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4" />
           </svg>
-          <!-- Compress icon -->
           <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4v4H4M16 4v4h4M8 20v-4H4M16 20v-4h4" />
           </svg>
@@ -76,9 +84,13 @@ onUnmounted(() => {
       <p class="text-slate-500 text-sm mt-2 max-w-xl">{{ game!.desc }}</p>
     </div>
 
-    <!-- Game — full viewport width, canvas scaled via CSS -->
-    <div ref="gameAreaRef" class="game-area relative flex flex-col items-center">
-      <!-- Fullscreen exit overlay -->
+    <!-- Game area -->
+    <div
+      ref="gameAreaRef"
+      class="game-area relative flex flex-col items-center"
+      :class="{ 'css-fullscreen': isCssFullscreen }"
+    >
+      <!-- Fullscreen exit overlay button -->
       <button
         v-if="isFullscreen"
         class="fullscreen-exit-btn"
@@ -97,7 +109,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Scale the canvas to fill the available width without changing game logic */
 .game-area :deep(canvas) {
   width: 100%;
   height: auto;
@@ -105,8 +116,9 @@ onUnmounted(() => {
   display: block;
 }
 
-/* Fullscreen: center game vertically, dark background */
-.game-area:fullscreen {
+/* Native fullscreen */
+.game-area:fullscreen,
+.game-area:-webkit-full-screen {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -115,13 +127,21 @@ onUnmounted(() => {
   padding: 1rem;
 }
 
-.game-area:-webkit-full-screen {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+/* CSS fallback for iOS Safari */
+.css-fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
   background: #030712;
-  padding: 1rem;
+  overflow-y: auto;
+  justify-content: center;
+  padding: 3.5rem 1rem 1rem;
+}
+
+.css-fullscreen :deep(canvas) {
+  max-height: calc(100svh - 140px);
+  width: auto;
+  max-width: 100%;
 }
 
 .fullscreen-exit-btn {

@@ -25,18 +25,17 @@ function release(key: string, code: string) {
 
 function btn(key: string, code: string) {
   return {
-    onMousedown:  (e: MouseEvent) => { e.preventDefault(); press(key, code) },
-    onMouseup:    ()               => release(key, code),
-    onMouseleave: ()               => release(key, code),
-    onTouchstart: (e: TouchEvent)  => { e.preventDefault(); press(key, code) },
-    onTouchend:   (e: TouchEvent)  => { e.preventDefault(); release(key, code) },
-    onTouchcancel:()               => release(key, code),
+    onMousedown:   (e: MouseEvent)  => { e.preventDefault(); press(key, code) },
+    onMouseup:     ()               => release(key, code),
+    onMouseleave:  ()               => release(key, code),
+    onTouchstart:  (e: TouchEvent)  => { e.preventDefault(); press(key, code) },
+    onTouchend:    (e: TouchEvent)  => { e.preventDefault(); release(key, code) },
+    onTouchcancel: ()               => release(key, code),
   }
 }
 
 const isPressed = (code: string) => pressed.value.has(code)
 
-// Mirror real keyboard presses onto the visual state
 function onRealDown(e: KeyboardEvent) { pressed.value = new Set([...pressed.value, e.code]) }
 function onRealUp(e: KeyboardEvent)   { const s = new Set(pressed.value); s.delete(e.code); pressed.value = s }
 
@@ -53,7 +52,7 @@ onUnmounted(() => {
 <template>
   <div v-if="layout !== ControlLayout.None" class="flex justify-center items-center select-none py-4">
 
-    <!-- D-pad: Snake, 2048 -->
+    <!-- D-pad: Snake, 2048, Tetris -->
     <div v-if="layout === ControlLayout.Dpad" class="grid grid-cols-3 gap-2" style="width: 192px">
       <div />
       <button v-bind="btn('ArrowUp', 'ArrowUp')"       :class="['gk-btn h-14 flex-col gap-0.5', isPressed('ArrowUp')    && 'gk-active']">
@@ -78,19 +77,51 @@ onUnmounted(() => {
       <div />
     </div>
 
-    <!-- Left + action + Right: Space Invaders, Breakout, Asteroid Dodge -->
-    <div v-else-if="layout === ControlLayout.LrFire || layout === ControlLayout.Lr" class="flex items-center gap-3">
-      <button v-bind="btn('ArrowLeft', 'ArrowLeft')"   :class="['gk-btn w-16 h-16 flex-col gap-0.5', isPressed('ArrowLeft')  && 'gk-active']">
-        <span class="text-xl leading-none">←</span>
-        <span class="gk-key">← key</span>
-      </button>
-      <button v-bind="btn(' ', 'Space')"               :class="['gk-btn w-20 h-16 flex-col gap-0.5', isPressed('Space') && 'gk-active']">
-        <span class="text-[11px] tracking-widest leading-none">{{ layout === ControlLayout.LrFire ? 'FIRE' : 'START' }}</span>
+    <!-- LrFire: arrows on left, FIRE on right — Space Invaders -->
+    <div v-else-if="layout === ControlLayout.LrFire" class="flex items-center gap-6">
+      <div class="flex gap-2">
+        <button v-bind="btn('ArrowLeft', 'ArrowLeft')"   :class="['gk-btn w-16 h-16 flex-col gap-0.5', isPressed('ArrowLeft')  && 'gk-active']">
+          <span class="text-xl leading-none">←</span>
+          <span class="gk-key">← key</span>
+        </button>
+        <button v-bind="btn('ArrowRight', 'ArrowRight')" :class="['gk-btn w-16 h-16 flex-col gap-0.5', isPressed('ArrowRight') && 'gk-active']">
+          <span class="text-xl leading-none">→</span>
+          <span class="gk-key">→ key</span>
+        </button>
+      </div>
+      <button v-bind="btn(' ', 'Space')" :class="['gk-btn w-20 h-16 flex-col gap-0.5', isPressed('Space') && 'gk-active']">
+        <span class="text-[11px] tracking-widest leading-none">FIRE</span>
         <span class="gk-key">SPACE</span>
       </button>
-      <button v-bind="btn('ArrowRight', 'ArrowRight')" :class="['gk-btn w-16 h-16 flex-col gap-0.5', isPressed('ArrowRight') && 'gk-active']">
-        <span class="text-xl leading-none">→</span>
-        <span class="gk-key">→ key</span>
+    </div>
+
+    <!-- Lr: arrows on left, START on right — Asteroid Dodge, Breakout -->
+    <div v-else-if="layout === ControlLayout.Lr" class="flex items-center gap-6">
+      <div class="flex gap-2">
+        <button v-bind="btn('ArrowLeft', 'ArrowLeft')"   :class="['gk-btn w-16 h-16 flex-col gap-0.5', isPressed('ArrowLeft')  && 'gk-active']">
+          <span class="text-xl leading-none">←</span>
+          <span class="gk-key">← key</span>
+        </button>
+        <button v-bind="btn('ArrowRight', 'ArrowRight')" :class="['gk-btn w-16 h-16 flex-col gap-0.5', isPressed('ArrowRight') && 'gk-active']">
+          <span class="text-xl leading-none">→</span>
+          <span class="gk-key">→ key</span>
+        </button>
+      </div>
+      <button v-bind="btn(' ', 'Space')" :class="['gk-btn w-20 h-16 flex-col gap-0.5', isPressed('Space') && 'gk-active']">
+        <span class="text-[11px] tracking-widest leading-none">START</span>
+        <span class="gk-key">SPACE</span>
+      </button>
+    </div>
+
+    <!-- UpDown: Cosmic Pong -->
+    <div v-else-if="layout === ControlLayout.UpDown" class="flex items-center gap-2">
+      <button v-bind="btn('ArrowUp', 'ArrowUp')"     :class="['gk-btn w-20 h-16 flex-col gap-0.5', isPressed('ArrowUp')   && 'gk-active']">
+        <span class="text-xl leading-none">↑</span>
+        <span class="gk-key">↑ key</span>
+      </button>
+      <button v-bind="btn('ArrowDown', 'ArrowDown')" :class="['gk-btn w-20 h-16 flex-col gap-0.5', isPressed('ArrowDown') && 'gk-active']">
+        <span class="text-xl leading-none">↓</span>
+        <span class="gk-key">↓ key</span>
       </button>
     </div>
 
