@@ -1,8 +1,13 @@
 <script setup lang="ts">
 const route = useRoute()
-const { data: project } = await useAsyncData(`project-${route.params.slug}`, () =>
-  queryCollection('projects').path(`/projects/${route.params.slug}`).first(),
-)
+const { data: project } = await useAsyncData(`project-${route.params.slug}`, async () => {
+  const slug = String(route.params.slug)
+  const projects = await queryCollection('projects').all()
+  return projects.find(project => {
+    const fileSlug = project.path.split('/').pop() ?? ''
+    return fileSlug === slug || fileSlug.endsWith(`-${slug}`)
+  }) ?? null
+})
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
 useSeoMeta({
   title: project.value.title,

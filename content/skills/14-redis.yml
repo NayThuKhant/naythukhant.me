@@ -1,4 +1,4 @@
 name: Redis
 icon: simple-icons:redis
-category: backend
-order: 11
+tags:
+  - backend

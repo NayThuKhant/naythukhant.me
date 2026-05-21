@@ -1,4 +1,4 @@
 name: CI/CD
 icon: simple-icons:githubactions
-category: devops
-order: 15
+tags:
+  - devops

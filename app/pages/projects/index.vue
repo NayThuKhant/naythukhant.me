@@ -3,20 +3,27 @@ const { scrollFadeUp } = useAnimations()
 const route = useRoute()
 const router = useRouter()
 
-const [{ data: projects }, { data: categories }] = await Promise.all([
-  useAsyncData('all-projects', () => queryCollection('projects').order('order', 'ASC').all()),
-  useAsyncData('project-categories', () => queryCollection('projectCategories').order('order', 'ASC').all()),
-])
+const { data: projects } = await useAsyncData('all-projects', () =>
+  queryCollection('projects').order('stem', 'ASC').all(),
+)
 
-const activeCategory = ref<string | null>((route.query.category as string) || null)
+const activeTag = ref<string | null>((route.query.tag as string) || null)
 
-watch(activeCategory, (val) => {
-  router.replace({ query: val ? { category: val } : {} })
+watch(activeTag, (val) => {
+  router.replace({ query: val ? { tag: val } : {} })
+})
+
+const allTags = computed(() => {
+  const seen = new Set<string>()
+  for (const p of projects.value ?? []) {
+    for (const t of p.tags ?? []) seen.add(t)
+  }
+  return [...seen].sort()
 })
 
 const filtered = computed(() =>
-  activeCategory.value
-    ? (projects.value ?? []).filter(p => p.category === activeCategory.value)
+  activeTag.value
+    ? (projects.value ?? []).filter(p => (p.tags ?? []).includes(activeTag.value as string))
     : (projects.value ?? []),
 )
 
@@ -47,27 +54,27 @@ useSeoMeta({
         </p>
       </div>
 
-      <!-- Category filter -->
+      <!-- Tag filter -->
       <div
-        v-if="categories?.length"
+        v-if="allTags.length"
         class="flex flex-wrap gap-2 mb-10"
       >
         <button
           class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeCategory === null
+          :class="activeTag === null
             ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeCategory = null"
+          @click="activeTag = null"
         >ALL</button>
         <button
-          v-for="cat in categories"
-          :key="cat.key"
+          v-for="tag in allTags"
+          :key="tag"
           class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeCategory === cat.key
+          :class="activeTag === tag
             ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeCategory = cat.key"
-        >#{{ cat.label }}</button>
+          @click="activeTag = tag"
+        >#{{ tag }}</button>
       </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -75,7 +82,7 @@ useSeoMeta({
       </div>
 
       <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
-        No projects in <span class="text-neon-blue">{{ categories?.find(c => c.key === activeCategory)?.label }}</span> yet.
+        No projects for <span class="text-neon-blue">#{{ activeTag }}</span> yet.
       </p>
     </div>
   </div>

@@ -1,4 +1,4 @@
 name: Rust
 icon: simple-icons:rust
-category: language
-order: 4
+tags:
+  - language

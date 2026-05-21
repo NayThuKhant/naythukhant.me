@@ -1,16 +1,21 @@
 <script setup lang="ts">
 const { scrollFadeUp, staggered } = useAnimations()
 
-const [{ data: skills }, { data: categories }] = await Promise.all([
-  useAsyncData('skills', () => queryCollection('skills').order('order', 'ASC').all()),
-  useAsyncData('skill-categories', () => queryCollection('skillCategories').order('order', 'ASC').all()),
-])
+const { data: skills } = await useAsyncData('skills', () => queryCollection('skills').order('stem', 'ASC').all())
 
-const activeCategory = ref<string | null>(null)
+const activeTag = ref<string | null>(null)
+
+const allTags = computed(() => {
+  const seen = new Set<string>()
+  for (const s of skills.value ?? []) {
+    for (const t of s.tags ?? []) seen.add(t)
+  }
+  return [...seen].sort()
+})
 
 const filtered = computed(() =>
-  activeCategory.value
-    ? (skills.value ?? []).filter(s => s.category === activeCategory.value)
+  activeTag.value
+    ? (skills.value ?? []).filter(s => (s.tags ?? []).includes(activeTag.value as string))
     : (skills.value ?? []),
 )
 
@@ -35,7 +40,7 @@ const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)
         <p class="mt-4 text-slate-500 font-mono text-sm">All systems operational</p>
       </div>
 
-      <!-- Category filter -->
+      <!-- Tag filter -->
       <div
         v-motion
         :initial="{ opacity: 0 }"
@@ -44,24 +49,24 @@ const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)
       >
         <button
           class="px-4 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeCategory === null
+          :class="activeTag === null
             ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue shadow-neon-sm-blue'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeCategory = null"
+          @click="activeTag = null"
         >ALL</button>
         <button
-          v-for="cat in categories"
-          :key="cat.key"
+          v-for="tag in allTags"
+          :key="tag"
           class="px-4 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeCategory === cat.key
+          :class="activeTag === tag
             ? 'bg-neon-purple/15 border-neon-purple/40 text-neon-purple shadow-neon-sm-purple'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeCategory = cat.key"
-        >#{{ cat.label }}</button>
+          @click="activeTag = tag"
+        >#{{ tag }}</button>
       </div>
 
       <!-- Skills grid -->
-      <div class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 gap-2">
+      <div class="grid grid-cols-6 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-2">
         <div
           v-for="(skill, index) in filtered"
           :key="skill.name"
@@ -74,7 +79,7 @@ const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)
             :name="skill.icon"
             class="w-4 h-4 text-slate-400 group-hover:text-white transition-colors duration-300"
           />
-          <span class="font-mono text-[8px] font-medium text-slate-400 group-hover:text-white transition-colors text-center leading-tight">
+          <span class="font-mono text-[10px] font-medium text-slate-400 group-hover:text-white transition-colors text-center leading-tight">
             {{ skill.name }}
           </span>
         </div>

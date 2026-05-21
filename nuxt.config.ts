@@ -25,10 +25,12 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      script: [
-        { src: '/_vercel/speed-insights/script.js', defer: true },
-        { src: '/_vercel/insights/script.js', defer: true },
-      ],
+      script: process.env.VERCEL_ANALYTICS_SPEED_INSIGHTS_ENABLED === 'true'
+        ? [
+          { src: '/_vercel/speed-insights/script.js', defer: true },
+          { src: '/_vercel/insights/script.js', defer: true },
+        ]
+        : [],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },

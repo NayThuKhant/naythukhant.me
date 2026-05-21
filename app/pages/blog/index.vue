@@ -4,13 +4,13 @@ const route = useRoute()
 const router = useRouter()
 
 const { data: posts } = await useAsyncData('all-posts', () =>
-  queryCollection('blog').order('date', 'DESC').all(),
+  queryCollection('blog').order('stem', 'ASC').all(),
 )
 
-const activeTag = ref<string | null>((route.query.category as string) || null)
+const activeTag = ref<string | null>((route.query.tag as string) || null)
 
 watch(activeTag, (val) => {
-  router.replace({ query: val ? { category: val } : {} })
+  router.replace({ query: val ? { tag: val } : {} })
 })
 
 const allTags = computed(() => {

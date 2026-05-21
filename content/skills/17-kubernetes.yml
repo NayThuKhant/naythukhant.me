@@ -1,4 +1,4 @@
 name: Kubernetes
 icon: simple-icons:kubernetes
-category: devops
-order: 14
+tags:
+  - devops

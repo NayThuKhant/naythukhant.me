@@ -106,7 +106,7 @@ useSeoMeta({
         <p class="hud-label mb-3">RECREATION MODULE</p>
         <h1 class="font-display font-bold text-5xl md:text-6xl text-white">Game Center</h1>
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          Lightweight browser games. Click any card to launch. Press ESC to exit.
+          Lightweight browser games. Click any card to launch.
         </p>
       </div>
 

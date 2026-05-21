@@ -1,4 +1,4 @@
 name: Node.js
 icon: simple-icons:nodedotjs
-category: backend
-order: 9
+tags:
+  - backend

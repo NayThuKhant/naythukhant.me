@@ -34,21 +34,27 @@ pages/
 ```
 
 ### Content Layer (Nuxt Content)
-All blog posts and project write-ups live as `.md` files under `content/`:
+All blog posts, projects, and skills live under `content/` and are ordered by filename:
 ```
 content/
-  blog/              # *.md — each file is a blog post
-  projects/          # *.md — rich project case studies (optional)
+  blog/              # *.md — each file is a blog post (filename controls order)
+  projects/          # *.md — rich project case studies (filename controls order)
+  skills/            # *.yml — skill metadata (filename controls order)
 ```
 
 Frontmatter schema for blog posts:
 ```yaml
-title, date, summary, tags[], coverImage
+title, date, summary, tags[], coverImage, featured
 ```
 
 Frontmatter schema for projects:
 ```yaml
-title, description, tags[], github, live, featured (bool), order (int)
+title, description, tags[], github, liveLink, image, featured (bool)
+```
+
+Frontmatter schema for skills:
+```yaml
+name, icon, tags[]
 ```
 
 Content is queried via the `queryContent()` composable from Nuxt Content. `<ContentRenderer>` handles rendering MDC/Markdown in detail pages.
@@ -71,7 +77,7 @@ components/
 - Neon glow effects use extended Tailwind `boxShadow` utilities with CSS custom properties for glow colors.
 
 ### Data Flow
-The site is fully statically generated (`nuxi generate`). Skills data is a plain TypeScript array in `data/skills.ts`. Projects without a dedicated content file are defined in `data/projects.ts`. The Nuxt Content module handles all blog and project MDX rendering at build time.
+The site is fully statically generated (`nuxi generate`). Content is sourced from Nuxt Content collections in `content/`, and list views filter by freeform `tags[]` rather than predefined categories.
 
 ### Nuxt 4 Alias Notes
 In Nuxt 4, `~` and `@` resolve to `srcDir` (`app/`). Use `@@/` to import from the project root (e.g. `@@/data/skills`). Components in subdirectories are auto-imported without path prefix because `nuxt.config.ts` sets `components: [{ path: '~/components', pathPrefix: false }]`.

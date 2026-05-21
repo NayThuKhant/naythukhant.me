@@ -1,4 +1,4 @@
 name: Linux
 icon: simple-icons:linux
-category: tools
-order: 18
+tags:
+  - tools

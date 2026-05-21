@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { scrollFadeUp } = useAnimations()
 const { data: posts } = await useAsyncData('featured-posts', () =>
-  queryCollection('blog').where('featured', '=', true).order('order', 'ASC').all(),
+  queryCollection('blog').where('featured', '=', true).order('stem', 'ASC').all(),
 )
 </script>
 

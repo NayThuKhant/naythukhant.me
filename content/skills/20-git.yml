@@ -1,4 +1,4 @@
 name: Git
 icon: simple-icons:git
-category: tools
-order: 17
+tags:
+  - tools

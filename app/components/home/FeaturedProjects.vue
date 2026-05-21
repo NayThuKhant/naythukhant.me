@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const { scrollFadeUp } = useAnimations()
 const { data: projects } = await useAsyncData('featured-projects', () =>
-  queryCollection('projects').where('featured', '=', true).order('order', 'ASC').all(),
+  queryCollection('projects').where('featured', '=', true).order('stem', 'ASC').all(),
 )
 </script>
 

@@ -1,4 +1,4 @@
 name: PostgreSQL
 icon: simple-icons:postgresql
-category: backend
-order: 10
+tags:
+  - backend

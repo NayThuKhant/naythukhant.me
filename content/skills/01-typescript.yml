@@ -1,4 +1,4 @@
 name: TypeScript
 icon: simple-icons:typescript
-category: language
-order: 1
+tags:
+  - language

@@ -1,11 +1,9 @@
 ---
 title: DevFlow CLI
 description: A developer productivity CLI that wires together git, GitHub PRs, Jira tickets, and Slack notifications into a single automated workflow.
-category: cli
-tags: [Go, CLI, GitHub API, Cobra]
+tags: [Go, CLI, GitHub API, Cobra, cli]
 github: https://github.com
 featured: true
-order: 2
 ---
 
 ## Overview

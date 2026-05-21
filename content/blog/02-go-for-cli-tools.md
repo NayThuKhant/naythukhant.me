@@ -4,7 +4,6 @@ date: 2025-01-22
 summary: After shipping CLIs in Node, Python, and Rust, Go has become my default choice — and the reasons are more boring than you'd expect.
 tags: [go, cli, tooling]
 featured: true
-order: 2
 ---
 
 The pragmatic reasons to pick Go for a CLI tool have nothing to do with performance.

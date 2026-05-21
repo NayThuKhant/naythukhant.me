@@ -18,7 +18,7 @@ bootLines:
 contacts:
   - label: GitHub
     url: https://github.com/NayThuKhant
-    icon: i-line-md:github
+    icon: i-mdi:linkedin
   - label: LinkedIn
     url: https://linkedin.com/in/naythukhant
     icon: i-bi:linkedin

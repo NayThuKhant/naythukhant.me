@@ -1,4 +1,4 @@
 name: Python
 icon: simple-icons:python
-category: language
-order: 3
+tags:
+  - language

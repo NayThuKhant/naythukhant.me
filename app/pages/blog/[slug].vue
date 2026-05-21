@@ -1,8 +1,13 @@
 <script setup lang="ts">
 const route = useRoute()
-const { data: post } = await useAsyncData(`post-${route.params.slug}`, () =>
-  queryCollection('blog').path(`/blog/${route.params.slug}`).first(),
-)
+const { data: post } = await useAsyncData(`post-${route.params.slug}`, async () => {
+  const slug = String(route.params.slug)
+  const posts = await queryCollection('blog').all()
+  return posts.find(post => {
+    const fileSlug = post.path.split('/').pop() ?? ''
+    return fileSlug === slug || fileSlug.endsWith(`-${slug}`)
+  }) ?? null
+})
 if (!post.value) throw createError({ statusCode: 404, message: 'Post not found' })
 
 const formattedDate = computed(() =>

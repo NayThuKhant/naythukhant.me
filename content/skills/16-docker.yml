@@ -1,4 +1,4 @@
 name: Docker
 icon: simple-icons:docker
-category: devops
-order: 13
+tags:
+  - devops
