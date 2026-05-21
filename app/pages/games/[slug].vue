@@ -84,15 +84,15 @@ onMounted(() => {
       <p class="text-slate-500 text-sm mt-2 max-w-xl">{{ game!.desc }}</p>
     </div>
 
-    <!-- Game area -->
+    <!-- Game area (native fullscreen or non-fullscreen) -->
     <div
+      v-show="!isCssFullscreen"
       ref="gameAreaRef"
       class="game-area relative flex flex-col items-center"
-      :class="{ 'css-fullscreen': isCssFullscreen }"
     >
-      <!-- Fullscreen exit overlay button -->
+      <!-- Exit button shown inside native fullscreen -->
       <button
-        v-if="isFullscreen"
+        v-if="isFullscreen && !isCssFullscreen"
         class="fullscreen-exit-btn"
         @click="toggleFullscreen"
       >
@@ -104,6 +104,20 @@ onMounted(() => {
       <component :is="game!.component" />
       <GameKeyboard :layout="game!.controls" />
     </div>
+
+    <!-- CSS fullscreen overlay teleported to body to escape main's z-index stacking context -->
+    <Teleport to="body">
+      <div v-if="isCssFullscreen" class="css-fullscreen-overlay">
+        <button class="fullscreen-exit-btn" @click="toggleFullscreen">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 4v4H4M16 4v4h4M8 20v-4H4M16 20v-4h4" />
+          </svg>
+          EXIT
+        </button>
+        <component :is="game!.component" />
+        <GameKeyboard :layout="game!.controls" />
+      </div>
+    </Teleport>
 
   </article>
 </template>
@@ -125,23 +139,6 @@ onMounted(() => {
   justify-content: center;
   background: #030712;
   padding: 1rem;
-}
-
-/* CSS fallback for iOS Safari */
-.css-fullscreen {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  background: #030712;
-  overflow-y: auto;
-  justify-content: center;
-  padding: 3.5rem 1rem 1rem;
-}
-
-.css-fullscreen :deep(canvas) {
-  max-height: calc(100svh - 140px);
-  width: auto;
-  max-width: 100%;
 }
 
 .fullscreen-exit-btn {
@@ -167,5 +164,53 @@ onMounted(() => {
 .fullscreen-exit-btn:hover {
   color: rgb(0 212 255);
   border-color: rgba(0 212 255 / 0.4);
+}
+</style>
+
+<!-- Global styles for the teleported CSS fullscreen overlay (outside component scope) -->
+<style>
+.css-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  background: #030712;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3.5rem 1rem 1rem;
+}
+
+.css-fullscreen-overlay canvas {
+  max-height: calc(100svh - 140px);
+  width: auto;
+  max-width: 100%;
+  display: block;
+}
+
+.css-fullscreen-overlay .fullscreen-exit-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 510;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: ui-monospace, monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: rgb(100 116 139);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 0.375rem 0.625rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.css-fullscreen-overlay .fullscreen-exit-btn:hover {
+  color: rgb(0, 212, 255);
+  border-color: rgba(0, 212, 255, 0.4);
 }
 </style>
