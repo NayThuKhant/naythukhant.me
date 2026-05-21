@@ -7,9 +7,9 @@ export default defineContentConfig({
       type: 'data',
       source: 'config.yml',
       schema: z.object({
-        greeting: z.string().optional(),
+        greeting: z.string(),
         name: z.string(),
-        role: z.string(),
+        description: z.string(),
         taglines: z.array(z.object({
           text: z.string(),
         })).default([]),

@@ -149,7 +149,7 @@ watch(bootDone, async (done) => {
             :enter="{ y: 0, transition: { duration: 600, delay: 160, ease: 'easeOut' } }"
             class="font-mono text-lg text-slate-400 mb-4 tracking-wide"
           >
-            <span class="text-neon-blue/80">~/</span>{{ config?.role }}
+            <span class="text-neon-blue/80">~/</span>{{ config?.description }}
           </p>
 
           <!-- Cycling tagline — reserved height to prevent shifts -->

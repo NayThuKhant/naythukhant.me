@@ -3,27 +3,13 @@
 import useConfig from '~/composables/useConfig'
 
 const { data: config } = await useConfig()
-const route = useRoute()
-
-const { data: page } = await useAsyncData('page-meta-home', () =>
-  queryCollection('pages').path('/').first(),
-)
 
 useHead({
-  titleTemplate: (title) => title ? `${title} · ${page.value?.title ?? ''}` : (page.value?.title ?? ''),
+  titleTemplate: (title) => title ? `${title} · ${config.value?.name ?? ''}` : (config.value?.name ?? ''),
   htmlAttrs: { lang: 'en' },
   link: [
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
   ],
-})
-
-useSeoMeta({
-  ...page.value?.seo,
-  ogTitle: page.value?.title,
-  ogDescription: page.value?.description,
-  twitterTitle: page.value?.title,
-  twitterDescription: page.value?.description,
-  twitterCard: 'summary_large_image',
 })
 </script>
 

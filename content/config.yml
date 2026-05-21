@@ -1,3 +1,6 @@
+greeting: Hi! I'am
+name: Nay Thu Khant
+description: A Software Engineer
 bootLines:
   - text: NAY THU KHANT — NEURAL BOOT SEQUENCE
     type: header
@@ -25,9 +28,6 @@ contacts:
   - label: Email
     url: mailto:naythukhant644@gmail.com
     icon: i-material-symbols:mail-outline
-greeting: Hi! I'am
-name: Nay Thu Khant
-role: A Software Engineer
 taglines:
   - text: Building scalable distributed systems.
   - text: Crafting beautiful, performant UIs.
