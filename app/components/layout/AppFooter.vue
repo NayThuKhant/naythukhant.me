@@ -1,5 +1,5 @@
 <template>
-  <footer class="relative z-10 mt-32 border-t border-white/[0.06]">
+  <footer class="relative z-10 border-t border-white/[0.06]">
     <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-neon-purple/30 to-transparent" />
     <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
 
@@ -11,10 +11,6 @@
       </div>
 
       <ContactLinks size="sm" />
-
-      <p class="font-mono text-xs text-slate-700">
-        Built with <span class="text-neon-emerald/60">Nuxt</span> + <span class="text-neon-purple/60">❤</span>
-      </p>
 
     </div>
   </footer>

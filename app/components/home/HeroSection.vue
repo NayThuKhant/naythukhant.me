@@ -1,14 +1,10 @@
 <script setup lang="ts">
 import type { BootLine } from '~/types'
 
-const bootLines: BootLine[] = [
-  { text: 'PORTFOLIO OS v2.0.1 — NEURAL BOOT SEQUENCE', type: 'header' },
-  { text: '>>> Establishing neural link...........', suffix: 'OK', type: 'sys' },
-  { text: '>>> Loading star navigation charts....', suffix: 'OK', type: 'sys' },
-  { text: '>>> Calibrating quantum warp drive....', suffix: 'OK', type: 'sys' },
-  { text: '>>> Mounting portfolio modules.........', suffix: 'OK', type: 'sys' },
-  { text: '>>> All systems nominal. Welcome, Engineer.', type: 'done' },
-]
+const [{ data: bootLines }, { data: taglines }] = await Promise.all([
+  useAsyncData('boot-lines', () => queryCollection('bootLines').order('order', 'ASC').all()),
+  useAsyncData('taglines', () => queryCollection('taglines').order('order', 'ASC').all()),
+])
 
 const completedLines = ref<BootLine[]>([])
 const currentTyping = ref('')
@@ -32,7 +28,7 @@ const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 
 onMounted(async () => {
   await sleep(300)
-  for (const line of bootLines) {
+  for (const line of bootLines.value ?? []) {
     if (cancelled) return
     await typeText(line.text, line.type === 'header' ? 14 : 22)
     if (cancelled) return
@@ -42,22 +38,14 @@ onMounted(async () => {
   }
   showCursor.value = false
   await sleep(600)
-  // Hero starts immediately — both transitions run simultaneously for a cross-dissolve
   bootDone.value = true
 })
 
-const taglines = [
-  'Building scalable distributed systems.',
-  'Crafting beautiful, performant UIs.',
-  'Shipping open-source tools.',
-  'Exploring the edge of the stack.',
-]
 const taglineIndex = ref(0)
 const taglineVisible = ref(false)
 
 watch(bootDone, async (done) => {
   if (!done) return
-  // tagline appears after hero has settled
   await sleep(1400)
   if (cancelled) return
   taglineVisible.value = true
@@ -65,7 +53,7 @@ watch(bootDone, async (done) => {
     if (cancelled) { clearInterval(interval); return }
     taglineVisible.value = false
     setTimeout(() => {
-      taglineIndex.value = (taglineIndex.value + 1) % taglines.length
+      taglineIndex.value = (taglineIndex.value + 1) % (taglines.value?.length ?? 1)
       taglineVisible.value = true
     }, 380)
   }, 3200)
@@ -94,7 +82,7 @@ watch(bootDone, async (done) => {
                 <span class="w-2.5 h-2.5 rounded-full bg-red-500/70" />
                 <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/70" />
                 <span class="w-2.5 h-2.5 rounded-full bg-neon-emerald/70" />
-                <span class="ml-3 font-mono text-xs text-slate-600 tracking-widest">NEURAL_BOOT — zsh</span>
+                <span class="ml-3 font-mono text-xs text-slate-600 tracking-widest">Terminal</span>
               </div>
 
               <!-- Body -->
@@ -159,7 +147,7 @@ watch(bootDone, async (done) => {
                 :key="taglineIndex"
                 class="w-full text-center font-mono text-sm text-slate-500"
               >
-                {{ taglines[taglineIndex] }}
+                {{ taglines?.[taglineIndex]?.text }}
               </p>
             </Transition>
           </div>
