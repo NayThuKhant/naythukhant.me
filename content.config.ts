@@ -2,6 +2,15 @@ import { defineContentConfig, defineCollection, z } from '@nuxt/content'
 
 export default defineContentConfig({
   collections: {
+    profile: defineCollection({
+      type: 'data',
+      source: 'home/*.yml',
+      schema: z.object({
+        name: z.string(),
+        role: z.string(),
+        available: z.boolean().default(true),
+      }),
+    }),
     bootLines: defineCollection({
       type: 'data',
       source: 'boot-lines/*.yml',

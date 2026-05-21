@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import type { BootLine } from '~/types'
 
-const [{ data: bootLines }, { data: taglines }] = await Promise.all([
+const [{ data: home }, { data: bootLines }, { data: taglines }] = await Promise.all([
+  useAsyncData('profile', () => queryCollection('profile').first()),
   useAsyncData('boot-lines', () => queryCollection('bootLines').order('order', 'ASC').all()),
   useAsyncData('taglines', () => queryCollection('taglines').order('order', 'ASC').all()),
 ])
@@ -126,7 +127,7 @@ watch(bootDone, async (done) => {
             class="font-display font-bold text-5xl sm:text-6xl md:text-7xl leading-tight mb-4"
           >
             <span class="block text-white mb-1">Hi, I'm</span>
-            <span class="block gradient-text-cyber">Your Name</span>
+            <span class="block gradient-text-cyber">{{ home?.name }}</span>
           </h1>
 
           <!-- Subtitle -->
@@ -136,7 +137,7 @@ watch(bootDone, async (done) => {
             :enter="{ y: 0, transition: { duration: 600, delay: 160, ease: 'easeOut' } }"
             class="font-mono text-lg text-slate-400 mb-4 tracking-wide"
           >
-            <span class="text-neon-blue/80">~/</span>Software Engineer
+            <span class="text-neon-blue/80">~/</span>{{ home?.role }}
           </p>
 
           <!-- Cycling tagline — reserved height to prevent shifts -->
