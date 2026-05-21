@@ -66,7 +66,7 @@ const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)
       </div>
 
       <!-- Skills grid -->
-      <div class="grid grid-cols-6 sm:grid-cols-6 md:grid-cols-9 lg:grid-cols-12 gap-2">
+      <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-2">
         <div
           v-for="(skill, index) in filtered"
           :key="skill.name"
