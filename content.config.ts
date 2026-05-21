@@ -8,7 +8,6 @@ export default defineContentConfig({
       schema: z.object({
         name: z.string(),
         role: z.string(),
-        available: z.boolean().default(true),
       }),
     }),
     bootLines: defineCollection({
