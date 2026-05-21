@@ -3,7 +3,7 @@ const { scrollFadeUp, staggered } = useAnimations()
 const { games } = useGames()
 const route = useRoute()
 
-const { data, pending } = usePageLoad('page-games', {
+const { data } = usePageLoad('page-games', {
   page: () => queryCollection('pages').path(route.path).first(),
 })
 
@@ -31,9 +31,7 @@ useSeoMeta({
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ data.page?.description }}</p>
       </div>
 
-      <LoadingSpinner v-if="pending" />
-
-      <div v-else class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         <div
           v-for="(game, i) in games"
           :key="game.id"

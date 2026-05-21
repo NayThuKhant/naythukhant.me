@@ -3,7 +3,7 @@ const { scrollFadeUp } = useAnimations()
 const route = useRoute()
 const router = useRouter()
 
-const { data, pending } = usePageLoad('projects-index', {
+const { data } = usePageLoad('projects-index', {
   page: () => queryCollection('pages').path(route.path).first(),
   projects: () => queryCollection('projects').order('stem', 'ASC').all(),
 })
@@ -49,10 +49,7 @@ useSeoMeta({
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ data.page?.description }}</p>
       </div>
 
-      <LoadingSpinner v-if="pending" />
-
-      <template v-else>
-        <!-- Tag filter -->
+      <!-- Tag filter -->
         <div v-if="allTags.length" class="flex flex-wrap gap-2 mb-10">
           <button
             class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
@@ -79,7 +76,6 @@ useSeoMeta({
         <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
           No projects for <span class="text-neon-blue">#{{ activeTag }}</span> yet.
         </p>
-      </template>
     </div>
   </div>
 </template>

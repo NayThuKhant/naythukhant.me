@@ -5,6 +5,7 @@ type Resolve<T extends QMap> = {
 }
 
 export function usePageLoad<T extends QMap>(key: string, queries: T) {
+  const { track } = useAppLoading()
   const keys = Object.keys(queries) as Array<keyof T & string>
 
   const { data: raw, pending } = useAsyncData(
@@ -12,6 +13,8 @@ export function usePageLoad<T extends QMap>(key: string, queries: T) {
     () => Promise.all(keys.map(k => queries[k]!().catch(() => null))),
     { default: (): null[] => keys.map(() => null) },
   )
+
+  track(pending)
 
   const data = computed<Resolve<T>>(() =>
     Object.fromEntries(
