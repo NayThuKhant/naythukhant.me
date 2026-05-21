@@ -13,7 +13,7 @@ bootLines:
   - text: ">>> Mounting portfolio modules........."
     suffix: OK
     type: sys
-  - text: ">>> All systems nominal. Welcome, Engineer."
+  - text: ">>> All systems nominal. Welcome!"
     type: done
 contacts:
   - label: GitHub
