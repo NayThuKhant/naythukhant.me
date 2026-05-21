@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/tailwindcss', '@vueuse/motion/nuxt'],
+  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/tailwindcss', '@vueuse/motion/nuxt', '@vercel/speed-insights/nuxt'],
   components: [{ path: '~/components', pathPrefix: false }],
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
