@@ -1,5 +1,5 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/tailwindcss', '@vueuse/motion/nuxt'],
+  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/tailwindcss', '@vueuse/motion/nuxt', '@vercel/speed-insights'],
   components: [{ path: '~/components', pathPrefix: false }],
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
@@ -25,10 +25,6 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
-      script: [
-        { src: '/_vercel/speed-insights/script.js', defer: true },
-        { src: '/_vercel/insights/script.js', defer: true },
-      ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
         { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: '' },
