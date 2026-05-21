@@ -7,6 +7,8 @@ tags:
   - css
   - performance
   - animation
+featured: true
+order: 1
 ---
 
 Particle effects look great in demos. They look terrible in production when your GPU fan spins up and the rest of the page janks. Here's the approach I settled on after three rewrites.

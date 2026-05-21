@@ -18,13 +18,13 @@ bootLines:
 contacts:
   - label: GitHub
     url: https://github.com/NayThuKhant
-    icon: github
+    icon: i-line-md:github
   - label: LinkedIn
     url: https://linkedin.com/in/naythukhant
-    icon: linkedin
+    icon: i-bi:linkedin
   - label: Email
-    url: mailto:sysadmin@onenex.co
-    icon: email
+    url: mailto:naythukhant644@gmail.com
+    icon: i-material-symbols:mail-outline
 greeting: Hi!
 name: Nay Thu Khant
 role: A Software Engineer

@@ -3,5 +3,6 @@
     <HeroSection />
     <SkillsGrid />
     <FeaturedProjects />
+    <FeaturedBlog />
   </div>
 </template>

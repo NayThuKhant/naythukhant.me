@@ -3,6 +3,8 @@ title: Type-Safe SQL in TypeScript Without an ORM
 date: 2024-11-05
 summary: A walkthrough of building a thin query-builder that catches SQL errors at compile time, not at 3am in production.
 tags: [typescript, postgres, sql]
+featured: true
+order: 3
 ---
 
 ORMs solve a real problem (writing SQL is tedious) and create a different one (debugging what SQL the ORM actually generated). After years of fighting both extremes, I landed on a thin query builder — just enough abstraction to get type safety, not so much that you lose sight of the SQL.
