@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import type { BootLine } from '~/types'
 
-const [{ data: home }, { data: bootLines }, { data: taglines }] = await Promise.all([
-  useAsyncData('profile', () => queryCollection('profile').first()),
-  useAsyncData('boot-lines', () => queryCollection('bootLines').order('order', 'ASC').all()),
-  useAsyncData('taglines', () => queryCollection('taglines').order('order', 'ASC').all()),
-])
+const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+
+const bootLines = computed(() => config.value?.bootLines ?? [])
+const taglines = computed(() => config.value?.taglines ?? [])
 
 const completedLines = ref<BootLine[]>([])
 const currentTyping = ref('')
@@ -29,7 +28,7 @@ const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 
 onMounted(async () => {
   await sleep(300)
-  for (const line of bootLines.value ?? []) {
+  for (const line of bootLines.value) {
     if (cancelled) return
     await typeText(line.text, line.type === 'header' ? 14 : 22)
     if (cancelled) return
@@ -54,7 +53,7 @@ watch(bootDone, async (done) => {
     if (cancelled) { clearInterval(interval); return }
     taglineVisible.value = false
     setTimeout(() => {
-      taglineIndex.value = (taglineIndex.value + 1) % (taglines.value?.length ?? 1)
+      taglineIndex.value = (taglineIndex.value + 1) % (taglines.value.length || 1)
       taglineVisible.value = true
     }, 380)
   }, 3200)
@@ -126,8 +125,8 @@ watch(bootDone, async (done) => {
             :enter="{ y: 0, transition: { duration: 700, delay: 80, ease: 'easeOut' } }"
             class="font-display font-bold text-5xl sm:text-6xl md:text-7xl leading-tight mb-4"
           >
-            <span class="block text-white mb-1">Hi, I'm</span>
-            <span class="block gradient-text-cyber">{{ home?.name }}</span>
+            <span class="block text-white mb-1">{{ config?.greeting }}</span>
+            <span class="block gradient-text-cyber">{{ config?.name }}</span>
           </h1>
 
           <!-- Subtitle -->
@@ -137,7 +136,7 @@ watch(bootDone, async (done) => {
             :enter="{ y: 0, transition: { duration: 600, delay: 160, ease: 'easeOut' } }"
             class="font-mono text-lg text-slate-400 mb-4 tracking-wide"
           >
-            <span class="text-neon-blue/80">~/</span>{{ home?.role }}
+            <span class="text-neon-blue/80">~/</span>{{ config?.role }}
           </p>
 
           <!-- Cycling tagline — reserved height to prevent shifts -->
@@ -148,7 +147,7 @@ watch(bootDone, async (done) => {
                 :key="taglineIndex"
                 class="w-full text-center font-mono text-sm text-slate-500"
               >
-                {{ taglines?.[taglineIndex]?.text }}
+                {{ taglines[taglineIndex]?.text }}
               </p>
             </Transition>
           </div>
@@ -168,7 +167,7 @@ watch(bootDone, async (done) => {
             </NuxtLink>
           </div>
 
-          <!-- Contact links — sourced from content/contacts/*.yml -->
+          <!-- Contact links -->
           <div
             v-motion
             :initial="{ y: 16 }"

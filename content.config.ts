@@ -2,30 +2,27 @@ import { defineContentConfig, defineCollection, z } from '@nuxt/content'
 
 export default defineContentConfig({
   collections: {
-    profile: defineCollection({
-      type: 'data',
-      source: 'home/*.yml',
+    config: defineCollection({
+      type: 'page',
+      source: 'config.md',
       schema: z.object({
+        greeting: z.string().optional(),
         name: z.string(),
         role: z.string(),
-      }),
-    }),
-    bootLines: defineCollection({
-      type: 'data',
-      source: 'boot-lines/*.yml',
-      schema: z.object({
-        text: z.string(),
-        suffix: z.string().optional(),
-        type: z.enum(['header', 'sys', 'done']),
-        order: z.number().default(99),
-      }),
-    }),
-    taglines: defineCollection({
-      type: 'data',
-      source: 'taglines/*.yml',
-      schema: z.object({
-        text: z.string(),
-        order: z.number().default(99),
+        available: z.boolean().default(true),
+        taglines: z.array(z.object({
+          text: z.string(),
+        })).default([]),
+        bootLines: z.array(z.object({
+          text: z.string(),
+          suffix: z.string().optional(),
+          type: z.enum(['header', 'sys', 'done']),
+        })).default([]),
+        contacts: z.array(z.object({
+          label: z.string(),
+          url: z.string(),
+          icon: z.string(),
+        })).default([]),
       }),
     }),
     skills: defineCollection({
@@ -79,16 +76,6 @@ export default defineContentConfig({
       schema: z.object({
         key: z.string(),
         label: z.string(),
-        order: z.number().default(99),
-      }),
-    }),
-    contacts: defineCollection({
-      type: 'data',
-      source: 'contacts/*.yml',
-      schema: z.object({
-        label: z.string(),
-        url: z.string(),
-        icon: z.string(),
         order: z.number().default(99),
       }),
     }),

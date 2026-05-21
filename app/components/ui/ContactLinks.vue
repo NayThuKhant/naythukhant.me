@@ -4,9 +4,8 @@ import type { ComponentSize } from '~/types'
 interface Props { size?: ComponentSize }
 withDefaults(defineProps<Props>(), { size: 'md' })
 
-const { data: contacts } = await useAsyncData('contacts', () =>
-  queryCollection('contacts').order('order', 'ASC').all(),
-)
+const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+const contacts = computed(() => config.value?.contacts ?? [])
 
 // SVG path data keyed by icon name — add entries here to support new icon types
 const iconPaths: Record<string, string> = {
@@ -35,7 +34,7 @@ const defaultColor = 'hover:text-white hover:border-white/20 hover:bg-white/5'
   <div class="flex items-center gap-3 flex-wrap">
     <a
       v-for="contact in contacts"
-      :key="contact.id"
+      :key="contact.label"
       :href="contact.url"
       :target="contact.url.startsWith('mailto:') ? undefined : '_blank'"
       :rel="contact.url.startsWith('mailto:') ? undefined : 'noopener noreferrer'"
