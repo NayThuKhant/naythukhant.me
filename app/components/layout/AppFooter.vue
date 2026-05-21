@@ -1,3 +1,7 @@
+<script setup lang="ts">
+import { ComponentSize } from '~/types'
+</script>
+
 <template>
   <footer class="relative z-10 border-t border-white/[0.06] pb-16 md:pb-0">
     <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-neon-purple/30 to-transparent" />
@@ -10,7 +14,7 @@
         <span class="text-slate-700">{{ new Date().getFullYear() }}</span>
       </div>
 
-      <ContactLinks size="sm" />
+      <ContactLinks :size="ComponentSize.Sm" />
 
     </div>
   </footer>

@@ -1,11 +1,20 @@
-export type { BlogCollectionItem as Post, ProjectsCollectionItem as Project, ContactsCollectionItem as Contact } from '@nuxt/content'
+export type { BlogCollectionItem as Post, ProjectsCollectionItem as Project } from '@nuxt/content'
 
-export type ComponentSize = 'sm' | 'md'
+export enum ComponentSize {
+  Sm = 'sm',
+  Md = 'md',
+}
+
+export enum BootLineType {
+  Header = 'header',
+  Sys = 'sys',
+  Done = 'done',
+}
 
 export interface BootLine {
   text: string
   suffix?: string
-  type: 'header' | 'sys' | 'done'
+  type: `${BootLineType}`
 }
 
 export interface MotionVariant {

@@ -1,4 +1,5 @@
 import { defineContentConfig, defineCollection, z } from '@nuxt/content'
+import { BootLineType } from './app/types'
 
 export default defineContentConfig({
   collections: {
@@ -20,7 +21,7 @@ export default defineContentConfig({
         bootLines: z.array(z.object({
           text: z.string(),
           suffix: z.string().optional(),
-          type: z.enum(['header', 'sys', 'done']),
+          type: z.nativeEnum(BootLineType),
         })).default([]),
         contacts: z.array(z.object({
           label: z.string(),

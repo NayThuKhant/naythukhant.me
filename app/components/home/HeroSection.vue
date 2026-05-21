@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { BootLine } from '~/types'
+import { BootLineType } from '~/types'
 
 const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
 
@@ -41,11 +42,11 @@ onMounted(async () => {
   await sleep(300)
   for (const line of bootLines.value) {
     if (cancelled) return
-    await typeText(line.text, line.type === 'header' ? 14 : 22)
+    await typeText(line.text, line.type === BootLineType.Header ? 14 : 22)
     if (cancelled) return
     completedLines.value.push(line)
     currentTyping.value = ''
-    await sleep(line.type === 'header' ? 200 : 80)
+    await sleep(line.type === BootLineType.Header ? 200 : 80)
   }
   showCursor.value = false
   await sleep(600)
@@ -104,11 +105,11 @@ watch(bootDone, async (done) => {
                   class="mb-1 flex gap-2"
                 >
                   <span :class="{
-                    'text-neon-blue font-bold': line.type === 'header',
-                    'text-slate-400': line.type === 'sys',
-                    'neon-text-emerald': line.type === 'done',
+                    'text-neon-blue font-bold': line.type === BootLineType.Header,
+                    'text-slate-400': line.type === BootLineType.Sys,
+                    'neon-text-emerald': line.type === BootLineType.Done,
                   }">{{ line.text }}</span>
-                  <span v-if="line.suffix" class="text-neon-emerald ml-1">[ {{ line.suffix }} ]</span>
+                  <span v-if="line.suffix" class="text-neon-emerald ml-1">[{{ line.suffix }}]</span>
                 </div>
 
                 <div v-if="currentTyping" class="flex items-center text-slate-300">
