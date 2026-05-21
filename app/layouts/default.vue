@@ -1,4 +1,5 @@
 <script setup lang="ts">
+
 const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
 const route = useRoute()
 
@@ -28,7 +29,7 @@ useSeoMeta({
 
 <template>
   <div class="min-h-screen flex flex-col text-slate-300 font-sans relative overflow-x-hidden">
-    <CosmicBackground />
+    <SolarSystemBackground />
     <AppNavbar />
     <main class="relative z-10 flex-1 pb-16 md:pb-0">
       <slot />
