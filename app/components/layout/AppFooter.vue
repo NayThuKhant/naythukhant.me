@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ComponentSize } from '~/types'
-const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+import useConfig from '~/composables/useConfig'
+const { data: config } = await useConfig()
 </script>
 
 <template>

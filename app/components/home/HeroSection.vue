@@ -2,7 +2,8 @@
 import type { BootLine } from '~/types'
 import { BootLineType } from '~/types'
 
-const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+import useConfig from '~/composables/useConfig'
+const { data: config } = await useConfig()
 
 const bootLines = computed(() => config.value?.bootLines ?? [])
 const taglines = computed(() => config.value?.taglines ?? [])

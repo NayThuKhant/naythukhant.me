@@ -1,6 +1,8 @@
 <script setup lang="ts">
 
-const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+import useConfig from '~/composables/useConfig'
+
+const { data: config } = await useConfig()
 const route = useRoute()
 
 const canonicalUrl = computed(() => (config.value?.siteUrl ?? '') + route.path)

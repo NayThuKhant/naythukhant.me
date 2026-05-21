@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import useConfig from '~/composables/useConfig'
 const route = useRoute()
 const scrolled = ref(false)
 
-const {data: config} = await useAsyncData('config', () => queryCollection('config').first())
+const { data: config } = await useConfig()
 
 const links = [
   {

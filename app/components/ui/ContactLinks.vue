@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import useConfig from '~/composables/useConfig'
 import { ComponentSize } from '~/types'
 
 interface Props {
@@ -8,7 +9,7 @@ withDefaults(defineProps<Props>(), {
   size: ComponentSize.Md,
 })
 
-const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+const { data: config } = await useConfig()
 
 const contacts = computed(() => config.value?.contacts ?? [])
 </script>
