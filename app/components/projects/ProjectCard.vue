@@ -1,15 +1,8 @@
 <script setup lang="ts">
-const props = defineProps<{
-  project: {
-    path: string
-    title: string
-    description: string
-    tags: string[]
-    github?: string
-    liveLink?: string
-    image?: string
-  }
-}>()
+import type { Project } from '~/types'
+
+interface Props { project: Project }
+const props = defineProps<Props>()
 
 const { scrollScaleIn } = useAnimations()
 const slug = computed(() => props.project.path.split('/').pop())

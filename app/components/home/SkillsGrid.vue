@@ -1,23 +1,20 @@
 <script setup lang="ts">
-import { skills, skillCategories } from '@@/data/skills'
-
 const { scrollFadeUp, staggered } = useAnimations()
+
+const [{ data: skills }, { data: categories }] = await Promise.all([
+  useAsyncData('skills', () => queryCollection('skills').order('order', 'ASC').all()),
+  useAsyncData('skill-categories', () => queryCollection('skillCategories').order('order', 'ASC').all()),
+])
+
 const activeCategory = ref<string | null>(null)
 
 const filtered = computed(() =>
-  activeCategory.value ? skills.filter(s => s.category === activeCategory.value) : skills,
+  activeCategory.value
+    ? (skills.value ?? []).filter(s => s.category === activeCategory.value)
+    : (skills.value ?? []),
 )
 
-// Pre-compute stagger variants for all skills so template has no function calls
-const skillMotion = computed(() => skills.map((_, i) => staggered(i, 40)))
-
-const categoryColor: Record<string, string> = {
-  language: 'neon-blue',
-  frontend: 'neon-purple',
-  backend: 'neon-emerald',
-  devops: 'neon-pink',
-  tools: 'neon-blue',
-}
+const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)))
 
 const barColor: Record<string, string> = {
   language: 'bg-neon-blue',
@@ -61,7 +58,7 @@ const barColor: Record<string, string> = {
           @click="activeCategory = null"
         >ALL</button>
         <button
-          v-for="cat in skillCategories"
+          v-for="cat in categories"
           :key="cat.key"
           class="px-4 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
           :class="activeCategory === cat.key
@@ -81,12 +78,10 @@ const barColor: Record<string, string> = {
           :visible-once="skillMotion[index]!.visibleOnce"
           class="glass-card p-4 flex flex-col items-center gap-3 cursor-default group"
         >
-          <!-- Name -->
           <span class="font-mono text-xs font-medium text-slate-300 group-hover:text-white transition-colors text-center leading-tight">
             {{ skill.name }}
           </span>
 
-          <!-- Proficiency bar -->
           <div class="w-full">
             <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
               <div
@@ -97,7 +92,6 @@ const barColor: Record<string, string> = {
             </div>
           </div>
 
-          <!-- Level dots -->
           <div class="flex gap-1">
             <span
               v-for="i in 5"

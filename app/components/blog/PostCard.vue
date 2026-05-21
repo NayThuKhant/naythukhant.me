@@ -1,13 +1,8 @@
 <script setup lang="ts">
-const props = defineProps<{
-  post: {
-    path: string
-    title: string
-    date: string
-    summary: string
-    tags: string[]
-  }
-}>()
+import type { Post } from '~/types'
+
+interface Props { post: Post }
+const props = defineProps<Props>()
 
 const { scrollScaleIn } = useAnimations()
 const slug = computed(() => props.post.path.split('/').pop())

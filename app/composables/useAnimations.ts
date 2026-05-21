@@ -1,38 +1,37 @@
+import type { MotionVariant, StaggeredVariant } from '~/types'
+
 export const useAnimations = () => {
-  // Entrance (triggered by `enter` lifecycle)
-  const fadeUp = {
+  const fadeUp: MotionVariant = {
     initial: { opacity: 0, y: 40 },
     enter: { opacity: 1, y: 0, transition: { duration: 600, ease: 'easeOut' } },
   }
 
-  const fadeIn = {
+  const fadeIn: MotionVariant = {
     initial: { opacity: 0 },
     enter: { opacity: 1, transition: { duration: 700 } },
   }
 
-  const scaleIn = {
+  const scaleIn: MotionVariant = {
     initial: { opacity: 0, scale: 0.88 },
     enter: { opacity: 1, scale: 1, transition: { duration: 500, ease: 'easeOut' } },
   }
 
-  // Scroll-triggered (use with `:visible-once` binding in template)
-  const scrollFadeUp = {
+  const scrollFadeUp: MotionVariant = {
     initial: { opacity: 0, y: 50 },
     visibleOnce: { opacity: 1, y: 0, transition: { duration: 600, ease: 'easeOut' } },
   }
 
-  const scrollScaleIn = {
+  const scrollScaleIn: MotionVariant = {
     initial: { opacity: 0, scale: 0.88, y: 20 },
     visibleOnce: { opacity: 1, scale: 1, y: 0, transition: { duration: 500, ease: 'easeOut' } },
   }
 
-  const scrollSlideLeft = {
+  const scrollSlideLeft: MotionVariant = {
     initial: { opacity: 0, x: -40 },
     visibleOnce: { opacity: 1, x: 0, transition: { duration: 600, ease: 'easeOut' } },
   }
 
-  // Returns a visibleOnce variant with stagger delay; call in setup, not template
-  const staggered = (index: number, base = 50) => ({
+  const staggered = (index: number, base = 50): StaggeredVariant => ({
     initial: { opacity: 0, scale: 0.88, y: 20 },
     visibleOnce: {
       opacity: 1, scale: 1, y: 0,

@@ -1,75 +1,31 @@
-# Nuxt Content Starter
+# Portfolio
 
-Look at the [Nuxt Content documentation](https://content.nuxt.com) to learn more.
+A modern, space-themed portfolio website for Software Engineers built with **Nuxt 4** and **Nuxt Content v3**.
 
-## Setup
+## Features
 
-Make sure to install dependencies:
+- Space / cyberpunk aesthetic with animated starfield and glassmorphism HUD components
+- Terminal boot-sequence hero animation
+- **Projects** — driven by Markdown files in `content/projects/`
+- **Blog** — driven by Markdown files in `content/blog/`
+- **Contacts** — driven by YAML files in `content/contacts/` (add a file to add a new link)
+- Scroll-triggered animations via `@vueuse/motion`
+
+## Getting Started
 
 ```bash
-# npm
 npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
+npm run dev       # http://localhost:3000
+npm run generate  # static output in .output/public/
+npm run build     # SSR build
 ```
 
-## Development Server
+## Personalising
 
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+| What | Where |
+|---|---|
+| Name & tagline | `app/components/home/HeroSection.vue` |
+| Skills list | `data/skills.ts` |
+| Projects | `content/projects/*.md` — frontmatter: `title`, `description`, `tags`, `github`, `liveLink`, `image`, `featured`, `order` |
+| Blog posts | `content/blog/*.md` — frontmatter: `title`, `date`, `summary`, `tags` |
+| Contact links | `content/contacts/*.yml` — frontmatter: `label`, `url`, `icon`, `order` |
