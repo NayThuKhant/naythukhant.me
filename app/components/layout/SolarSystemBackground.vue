@@ -55,7 +55,7 @@ function setup() {
   W = canvasEl.value.width  = window.innerWidth
   H = canvasEl.value.height = window.innerHeight
   SX = W * 0.50
-  SY = H * 0.52
+  SY = H * 0.72   // lower center keeps planets out of the hero content area
   sc = Math.min(W, H) / 1100
   buildStars()
   buildPlanets()
@@ -578,6 +578,29 @@ function renderPlanet(ctx: CanvasRenderingContext2D, p: PlanetDef, ts: number) {
   ctx.restore()
 }
 
+// ─── Content-area dim overlay ────────────────────────────────────────────────
+// Painted last so it uniformly quiets the background behind page content.
+// Two layers:
+//  1. Radial vignette centred on the upper hero zone — deepest in the middle
+//     where heading text lives, fading out toward the solar system edges.
+//  2. A thin global tint that drops the overall brightness so planets read
+//     as atmosphere rather than UI elements competing for attention.
+
+function drawDimOverlay(ctx: CanvasRenderingContext2D) {
+  // Upper-centre vignette (where hero / blog / project content lives)
+  const vg = ctx.createRadialGradient(W*0.50, H*0.28, 0, W*0.50, H*0.28, W*0.58)
+  vg.addColorStop(0,    'rgba(3,7,18,0.72)')
+  vg.addColorStop(0.38, 'rgba(3,7,18,0.48)')
+  vg.addColorStop(0.65, 'rgba(3,7,18,0.20)')
+  vg.addColorStop(1,    'rgba(3,7,18,0)')
+  ctx.fillStyle = vg
+  ctx.fillRect(0, 0, W, H)
+
+  // Subtle global tint — takes the edge off everything uniformly
+  ctx.fillStyle = 'rgba(3,7,18,0.28)'
+  ctx.fillRect(0, 0, W, H)
+}
+
 // ─── Frame loop ───────────────────────────────────────────────────────────────
 
 function frame(ts: number) {
@@ -605,6 +628,9 @@ function frame(ts: number) {
   // Planets + asteroids in front of the sun
   drawAsteroidBelt(ctx, ts, true)
   for (const { p, py } of sorted) if (py >= SY) renderPlanet(ctx, p, ts)
+
+  // Dim overlay always last — quiets the scene behind page content
+  drawDimOverlay(ctx)
 }
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────

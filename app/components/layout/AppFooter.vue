@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ComponentSize } from '~/types'
+const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
 </script>
 
 <template>
@@ -9,7 +10,7 @@ import { ComponentSize } from '~/types'
 
       <div class="flex items-center gap-3 font-mono text-xs text-slate-600">
         <span class="text-neon-blue/40">◈</span>
-        <span>PORTFOLIO OS v2.0.1</span>
+        <span>{{ config?.name }}</span>
         <span class="text-neon-blue/40">◈</span>
         <span class="text-slate-700">{{ new Date().getFullYear() }}</span>
       </div>
