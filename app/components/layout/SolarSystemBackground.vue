@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { PlanetName } from '~/types'
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Star {
@@ -9,7 +11,7 @@ interface Star {
 
 interface Shooting {
   x: number; y: number; vx: number; vy: number
-  len: number; alpha: number; active: boolean
+  len: number; alpha: number
 }
 
 interface Moon { orbitR: number; speed: number; startAngle: number; r: number }
@@ -21,8 +23,7 @@ interface PlanetDef {
   r: number          // radius at scale=1
   rotSpeed: number   // surface rotation rad/ms
   rotOffset: number
-  type: 'mercury' | 'venus' | 'earth' | 'mars' | 'jupiter' | 'saturn' | 'uranus' | 'neptune'
-  name: string
+  planet: PlanetName
   moon?: Moon
 }
 
@@ -44,7 +45,7 @@ let planets: PlanetDef[] = []
 let asteroids: Asteroid[] = []
 let tick = 0
 let lastShot = 0
-const shooting: Shooting = { x:0,y:0,vx:0,vy:0,len:0,alpha:0,active:false }
+const shootings: Shooting[] = []
 
 const rnd = (a: number, b: number) => a + Math.random() * (b - a)
 
@@ -79,15 +80,15 @@ function buildStars() {
 
 function buildPlanets() {
   planets = [
-    { a:72,  speed:5.2e-4, startAngle:0.50, r:3.5,  rotSpeed:1.8e-4, rotOffset:0.0, type:'mercury', name:'Mercury' },
-    { a:118, speed:3.2e-4, startAngle:2.10, r:7.2,  rotSpeed:1.1e-4, rotOffset:1.0, type:'venus',   name:'Venus'   },
-    { a:170, speed:2.1e-4, startAngle:1.20, r:7.8,  rotSpeed:2.8e-4, rotOffset:0.8, type:'earth',   name:'Earth',
+    { a:72,  speed:5.2e-4, startAngle:0.50, r:3.5,  rotSpeed:1.8e-4, rotOffset:0.0, planet:PlanetName.Mercury },
+    { a:118, speed:3.2e-4, startAngle:2.10, r:7.2,  rotSpeed:1.1e-4, rotOffset:1.0, planet:PlanetName.Venus   },
+    { a:170, speed:2.1e-4, startAngle:1.20, r:7.8,  rotSpeed:2.8e-4, rotOffset:0.8, planet:PlanetName.Earth,
       moon:{ orbitR:21, speed:2.0e-3, startAngle:0.4, r:2.1 } },
-    { a:225, speed:1.4e-4, startAngle:3.80, r:5.2,  rotSpeed:2.6e-4, rotOffset:2.0, type:'mars',    name:'Mars'    },
-    { a:328, speed:6.5e-5, startAngle:0.90, r:22.0, rotSpeed:4.5e-4, rotOffset:0.5, type:'jupiter', name:'Jupiter' },
-    { a:422, speed:3.8e-5, startAngle:2.80, r:16.0, rotSpeed:3.8e-4, rotOffset:1.5, type:'saturn',  name:'Saturn'  },
-    { a:502, speed:2.4e-5, startAngle:4.50, r:12.0, rotSpeed:2.2e-4, rotOffset:3.0, type:'uranus',  name:'Uranus'  },
-    { a:568, speed:1.6e-5, startAngle:1.80, r:11.0, rotSpeed:2.0e-4, rotOffset:0.8, type:'neptune', name:'Neptune' },
+    { a:225, speed:1.4e-4, startAngle:3.80, r:5.2,  rotSpeed:2.6e-4, rotOffset:2.0, planet:PlanetName.Mars    },
+    { a:328, speed:6.5e-5, startAngle:0.90, r:22.0, rotSpeed:4.5e-4, rotOffset:0.5, planet:PlanetName.Jupiter },
+    { a:422, speed:3.8e-5, startAngle:2.80, r:16.0, rotSpeed:3.8e-4, rotOffset:1.5, planet:PlanetName.Saturn  },
+    { a:502, speed:2.4e-5, startAngle:4.50, r:12.0, rotSpeed:2.2e-4, rotOffset:3.0, planet:PlanetName.Uranus  },
+    { a:568, speed:1.6e-5, startAngle:1.80, r:11.0, rotSpeed:2.0e-4, rotOffset:0.8, planet:PlanetName.Neptune },
   ]
 }
 
@@ -116,25 +117,26 @@ function drawStars(ctx: CanvasRenderingContext2D) {
 }
 
 function updateShooting(ctx: CanvasRenderingContext2D) {
-  if (shooting.active) {
+  for (let i = shootings.length - 1; i >= 0; i--) {
+    const s = shootings[i]!
     const g = ctx.createLinearGradient(
-      shooting.x - shooting.vx * shooting.len / 8,
-      shooting.y - shooting.vy * shooting.len / 8,
-      shooting.x, shooting.y,
+      s.x - s.vx * s.len / 8,
+      s.y - s.vy * s.len / 8,
+      s.x, s.y,
     )
     g.addColorStop(0, 'rgba(200,230,255,0)')
-    g.addColorStop(1, `rgba(200,230,255,${shooting.alpha.toFixed(2)})`)
+    g.addColorStop(1, `rgba(200,230,255,${s.alpha.toFixed(2)})`)
     ctx.beginPath()
-    ctx.moveTo(shooting.x - shooting.vx * shooting.len / 8, shooting.y - shooting.vy * shooting.len / 8)
-    ctx.lineTo(shooting.x, shooting.y)
+    ctx.moveTo(s.x - s.vx * s.len / 8, s.y - s.vy * s.len / 8)
+    ctx.lineTo(s.x, s.y)
     ctx.strokeStyle = g; ctx.lineWidth = 1.5; ctx.stroke()
-    shooting.x += shooting.vx; shooting.y += shooting.vy; shooting.alpha -= 0.018
-    if (shooting.alpha <= 0 || shooting.x > W || shooting.y > H) shooting.active = false
+    s.x += s.vx; s.y += s.vy; s.alpha -= 0.014
+    if (s.alpha <= 0 || s.x > W + 100 || s.y > H + 100) shootings.splice(i, 1)
   }
-  if (tick - lastShot > 9 + Math.random() * 7) {
+  if (shootings.length < 5 && tick - lastShot > 2 + Math.random() * 2.5) {
     lastShot = tick
     const angle = Math.PI / 6 + Math.random() * Math.PI / 8
-    Object.assign(shooting, { x:rnd(0,W*0.7), y:rnd(0,H*0.3), vx:Math.cos(angle)*8, vy:Math.sin(angle)*8, len:rnd(80,160), alpha:1, active:true })
+    shootings.push({ x:rnd(0,W*0.85), y:rnd(0,H*0.45), vx:Math.cos(angle)*rnd(6,11), vy:Math.sin(angle)*rnd(6,11), len:rnd(80,200), alpha:1 })
   }
 }
 
@@ -204,8 +206,8 @@ function drawSun(ctx: CanvasRenderingContext2D, ts: number) {
   ctx.save(); ctx.translate(SX, SY)
   ctx.beginPath(); ctx.arc(0, 0, r*pulse, 0, τ); ctx.clip()
   ctx.rotate(ts * 3.5e-5); ctx.globalAlpha = 0.11
-  ;[[ r*0.26, r*0.12,r*0.24],[-r*0.32, r*0.22,r*0.18],[ r*0.06,-r*0.30,r*0.20],
-    [-r*0.18,-r*0.14,r*0.14],[ r*0.36,-r*0.18,r*0.16],[-r*0.05, r*0.35,r*0.13]].forEach(([cx,cy,cr]) => {
+  ;([ [ r*0.26, r*0.12,r*0.24],[-r*0.32, r*0.22,r*0.18],[ r*0.06,-r*0.30,r*0.20],
+    [-r*0.18,-r*0.14,r*0.14],[ r*0.36,-r*0.18,r*0.16],[-r*0.05, r*0.35,r*0.13]] as [number,number,number][]).forEach(([cx,cy,cr]) => {
     ctx.beginPath(); ctx.arc(cx,cy,cr,0,τ); ctx.fillStyle='#fff0a0'; ctx.fill()
   })
   ctx.globalAlpha=1; ctx.restore()
@@ -438,15 +440,15 @@ function drawSaturn(ctx: CanvasRenderingContext2D, r: number, rot: number, la: n
   // Saturn bands
   ctx.save();ctx.beginPath();ctx.arc(0,0,r,0,τ);ctx.clip()
   const boff=(rot*r*0.40)%(r*2); ctx.globalAlpha=0.38
-  ;[
+  ;([
     ['rgba(255,238,160,0.72)',0.05,0.10],['rgba(195,145,55,0.82)',0.10,0.20],
     ['rgba(248,225,140,0.65)',0.20,0.32],['rgba(188,138,48,0.78)',0.32,0.44],
     ['rgba(252,232,150,0.60)',0.44,0.58],['rgba(195,148,58,0.74)',0.58,0.70],
     ['rgba(248,225,138,0.62)',0.70,0.82],['rgba(185,135,45,0.72)',0.82,0.92],
     ['rgba(250,228,145,0.58)',0.92,1.00],
-  ].forEach(([col,t0,t1]) => {
-    const by=-r+(t0 as number)*r*2, h=(t1 as number-t0 as number)*r*2
-    ctx.fillStyle=col as string
+  ] as [string,number,number][]).forEach(([col,t0,t1]) => {
+    const by=-r+t0*r*2, h=(t1-t0)*r*2
+    ctx.fillStyle=col
     ctx.fillRect(boff-r*3,by,r*6,h); ctx.fillRect(boff-r*3-r*2,by,r*6,h)
   })
   ctx.globalAlpha=1; ctx.restore()
@@ -507,9 +509,9 @@ function drawNeptune(ctx: CanvasRenderingContext2D, r: number, rot: number, la: 
   const boff=(rot*r*0.58)%(r*2)
   // Storm bands + Great Dark Spot
   ctx.globalAlpha=0.35
-  ;[['rgba(65,105,230,0.80)',0.20,0.29],['rgba(50,88,210,0.72)',0.52,0.62],['rgba(60,98,220,0.75)',0.74,0.82]].forEach(([col,t0,t1]) => {
-    const by=-r+(t0 as number)*r*2, h=(t1 as number-t0 as number)*r*2
-    ctx.fillStyle=col as string
+  ;([['rgba(65,105,230,0.80)',0.20,0.29],['rgba(50,88,210,0.72)',0.52,0.62],['rgba(60,98,220,0.75)',0.74,0.82]] as [string,number,number][]).forEach(([col,t0,t1]) => {
+    const by=-r+t0*r*2, h=(t1-t0)*r*2
+    ctx.fillStyle=col
     ctx.fillRect(boff-r*3,by,r*6,h); ctx.fillRect(boff-r*3-r*2,by,r*6,h)
   })
   ctx.globalAlpha=1
@@ -529,7 +531,7 @@ function drawMoon(ctx: CanvasRenderingContext2D, mx: number, my: number, r: numb
   body.addColorStop(0,'#d0c8bc'); body.addColorStop(0.48,'#9a9080'); body.addColorStop(1,'#26221c')
   ctx.beginPath();ctx.arc(0,0,r,0,τ);ctx.fillStyle=body;ctx.fill()
   ctx.save();ctx.beginPath();ctx.arc(0,0,r,0,τ);ctx.clip();ctx.globalAlpha=0.22
-  ;[[ r*0.18, r*0.10,r*0.14],[-r*0.22, r*0.15,r*0.10]].forEach(([cx,cy,cr]) => {
+  ;([[ r*0.18, r*0.10,r*0.14],[-r*0.22, r*0.15,r*0.10]] as [number,number,number][]).forEach(([cx,cy,cr]) => {
     ctx.beginPath();ctx.arc(cx,cy,cr,0,τ);ctx.fillStyle='rgba(50,44,36,0.80)';ctx.fill()
   })
   ctx.globalAlpha=1; ctx.restore()
@@ -549,18 +551,18 @@ function renderPlanet(ctx: CanvasRenderingContext2D, p: PlanetDef, ts: number) {
 
   ctx.save(); ctx.translate(px, py)
 
-  if      (p.type === 'mercury') drawMercury(ctx, r, rot, la)
-  else if (p.type === 'venus'  ) drawVenus  (ctx, r, rot, la)
-  else if (p.type === 'earth'  ) drawEarth  (ctx, r, rot, la)
-  else if (p.type === 'mars'   ) drawMars   (ctx, r, rot, la)
-  else if (p.type === 'jupiter') drawJupiter(ctx, r, rot, la)
-  else if (p.type === 'saturn' ) drawSaturn (ctx, r, rot, la)
-  else if (p.type === 'uranus' ) drawUranus (ctx, r, rot, la)
-  else                           drawNeptune(ctx, r, rot, la)
+  if      (p.planet === PlanetName.Mercury) drawMercury(ctx, r, rot, la)
+  else if (p.planet === PlanetName.Venus  ) drawVenus  (ctx, r, rot, la)
+  else if (p.planet === PlanetName.Earth  ) drawEarth  (ctx, r, rot, la)
+  else if (p.planet === PlanetName.Mars   ) drawMars   (ctx, r, rot, la)
+  else if (p.planet === PlanetName.Jupiter) drawJupiter(ctx, r, rot, la)
+  else if (p.planet === PlanetName.Saturn ) drawSaturn (ctx, r, rot, la)
+  else if (p.planet === PlanetName.Uranus ) drawUranus (ctx, r, rot, la)
+  else                                      drawNeptune(ctx, r, rot, la)
 
   // Label — positioned below planet (account for rings on Saturn/Uranus)
-  const ringExtra = p.type === 'saturn' ? r*2.02*0.30 : p.type === 'uranus' ? r*1.65*0.22 : 0
-  drawLabel(ctx, p.name, r + ringExtra + 16)
+  const ringExtra = p.planet === PlanetName.Saturn ? r*2.02*0.30 : p.planet === PlanetName.Uranus ? r*1.65*0.22 : 0
+  drawLabel(ctx, p.planet, r + ringExtra + 16)
 
   // Moon (Earth only)
   if (p.moon) {

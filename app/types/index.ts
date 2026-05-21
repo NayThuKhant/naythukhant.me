@@ -11,6 +11,17 @@ export enum BootLineType {
   Done = 'done',
 }
 
+export enum PlanetName {
+  Mercury = 'Mercury',
+  Venus   = 'Venus',
+  Earth   = 'Earth',
+  Mars    = 'Mars',
+  Jupiter = 'Jupiter',
+  Saturn  = 'Saturn',
+  Uranus  = 'Uranus',
+  Neptune = 'Neptune',
+}
+
 export interface BootLine {
   text: string
   suffix?: string
