@@ -1,0 +1,30 @@
+---
+title: Type-Safe SQL in TypeScript Without an ORM
+date: 2024-11-05
+summary: A walkthrough of building a thin query-builder that catches SQL errors at compile time, not at 3am in production.
+tags: [typescript, postgres, sql]
+---
+
+ORMs solve a real problem (writing SQL is tedious) and create a different one (debugging what SQL the ORM actually generated). After years of fighting both extremes, I landed on a thin query builder — just enough abstraction to get type safety, not so much that you lose sight of the SQL.
+
+## The core insight
+
+SQL queries compose in predictable ways. `SELECT`, `WHERE`, `ORDER BY`, `LIMIT` are chained left-to-right. If you model each clause as a function that takes the previous builder state and returns a new one, you get a fluent API that TypeScript can fully infer.
+
+```typescript
+type Builder<T extends Record<string, unknown>> = {
+  select<K extends keyof T>(...cols: K[]): Builder<Pick<T, K>>
+  where<K extends keyof T>(col: K, op: Op, val: T[K]): Builder<T>
+  build(): { sql: string; params: unknown[] }
+}
+```
+
+The type parameter `T` carries the schema. `select` narrows it. `where` constrains the value type to match the column. If you try to `where('age', '=', 'not a number')` on a numeric column, TypeScript refuses at compile time.
+
+## What you give up
+
+Joins are hard. The moment you join two tables, the result type is the product of both schemas — which is expressible in TypeScript, but verbose. For complex joins I drop down to raw SQL with a typed cast. The 80% case is clean; the 20% is raw.
+
+## The full implementation
+
+The source is on GitHub in the [QueryKit repo](https://github.com). It's ~300 lines including tests.
