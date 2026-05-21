@@ -2,9 +2,18 @@
 const { scrollFadeUp, staggered } = useAnimations()
 const { games } = useGames()
 
+// Load editable page-level SEO/meta from content/pages/games.md (if present)
+// Load page metadata for the games index. We look up by title because pages no longer require `slug`.
+const { data: pageMeta } = await useAsyncData('page-meta-games', () =>
+  queryCollection('pages').where('title', '=', 'Game Center').first(),
+)
+
+const pageTitle = computed(() => pageMeta.value?.title ?? 'Game Center')
+const pageDescription = computed(() => pageMeta.value?.description ?? 'Lightweight browser games. Click any card to launch.')
+
 useSeoMeta({
-  title: 'Game Center',
-  description: 'Lightweight arcade games — play right in the browser.',
+  title: pageMeta.value?.title ?? pageTitle.value,
+  description: pageMeta.value?.description ?? pageDescription.value,
 })
 </script>
 
@@ -19,9 +28,9 @@ useSeoMeta({
         class="mb-14"
       >
         <p class="hud-label mb-3">RECREATION MODULE</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">Game Center</h1>
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ pageTitle }}</h1>
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          Lightweight browser games. Click any card to launch.
+          {{ pageDescription }}
         </p>
       </div>
 

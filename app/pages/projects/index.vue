@@ -7,7 +7,16 @@ const { data: projects } = await useAsyncData('all-projects', () =>
   queryCollection('projects').order('stem', 'ASC').all(),
 )
 
+// Load editable page-level SEO/meta from content/pages/projects.md (if present)
+// Load page metadata for the projects index. We look up by title because pages no longer require `slug`.
+const { data: pageMeta } = await useAsyncData('page-meta-projects', () =>
+  queryCollection('pages').where('title', '=', 'Projects').first(),
+)
+
 const activeTag = ref<string | null>((route.query.tag as string) || null)
+
+const pageTitle = computed(() => pageMeta.value?.title ?? 'Projects')
+const pageDescription = computed(() => pageMeta.value?.description ?? 'Open-source tools, side experiments, and production systems — all things I\'ve built.')
 
 watch(activeTag, (val) => {
   router.replace({ query: val ? { tag: val } : {} })
@@ -28,12 +37,12 @@ const filtered = computed(() =>
 )
 
 useSeoMeta({
-  title: 'Projects',
-  description: 'Open-source and personal projects spanning the full stack.',
-  ogTitle: 'Projects',
-  ogDescription: 'Open-source and personal projects spanning the full stack.',
-  twitterTitle: 'Projects',
-  twitterDescription: 'Open-source and personal projects spanning the full stack.',
+  title: pageMeta.value?.title ?? pageTitle.value,
+  description: pageMeta.value?.description ?? pageDescription.value,
+  ogTitle: pageMeta.value?.title ?? pageTitle.value,
+  ogDescription: pageMeta.value?.description ?? pageDescription.value,
+  twitterTitle: pageMeta.value?.title ?? pageTitle.value,
+  twitterDescription: pageMeta.value?.description ?? pageDescription.value,
 })
 </script>
 
@@ -48,9 +57,9 @@ useSeoMeta({
         class="mb-12"
       >
         <p class="hud-label mb-3">MISSION LOG</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">Projects</h1>
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ pageTitle }}</h1>
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          Open-source tools, side experiments, and production systems — all things I've built.
+          {{ pageDescription }}
         </p>
       </div>
 

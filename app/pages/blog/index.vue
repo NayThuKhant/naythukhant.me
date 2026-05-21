@@ -7,7 +7,16 @@ const { data: posts } = await useAsyncData('all-posts', () =>
   queryCollection('blog').order('stem', 'ASC').all(),
 )
 
+// Load editable page-level SEO/meta from content/pages/blog.md (if present)
+// Load page metadata for the blog index. We look up by title because pages no longer require `slug`.
+const { data: pageMeta } = await useAsyncData('page-meta-blog', () =>
+  queryCollection('pages').where('title', '=', 'Blog').first(),
+)
+
 const activeTag = ref<string | null>((route.query.tag as string) || null)
+
+const pageTitle = computed(() => pageMeta.value?.title ?? 'Blog')
+const pageDescription = computed(() => pageMeta.value?.description ?? 'Thoughts on software engineering, open source, and the tools I use to build things.')
 
 watch(activeTag, (val) => {
   router.replace({ query: val ? { tag: val } : {} })
@@ -28,12 +37,12 @@ const filtered = computed(() =>
 )
 
 useSeoMeta({
-  title: 'Blog',
-  description: 'Writing on software engineering, tools, and the craft.',
-  ogTitle: 'Blog',
-  ogDescription: 'Writing on software engineering, tools, and the craft.',
-  twitterTitle: 'Blog',
-  twitterDescription: 'Writing on software engineering, tools, and the craft.',
+  title: pageMeta.value?.title ?? pageTitle.value,
+  description: pageMeta.value?.description ?? pageDescription.value,
+  ogTitle: pageMeta.value?.title ?? pageTitle.value,
+  ogDescription: pageMeta.value?.description ?? pageDescription.value,
+  twitterTitle: pageMeta.value?.title ?? pageTitle.value,
+  twitterDescription: pageMeta.value?.description ?? pageDescription.value,
 })
 </script>
 
@@ -48,9 +57,9 @@ useSeoMeta({
         class="mb-12"
       >
         <p class="hud-label mb-3">TRANSMISSIONS</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">Blog</h1>
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ pageTitle }}</h1>
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">
-          Thoughts on software engineering, open source, and the tools I use to build things.
+          {{ pageDescription }}
         </p>
       </div>
 

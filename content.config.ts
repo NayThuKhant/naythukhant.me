@@ -64,5 +64,13 @@ export default defineContentConfig({
         featured: z.boolean().default(false),
       }),
     }),
+    pages: defineCollection({
+      type: 'page',
+      source: 'pages/*.md',
+      schema: z.object({
+        title: z.string(),
+        description: z.string().optional(),
+      }),
+    }),
   },
 })
