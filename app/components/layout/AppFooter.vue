@@ -1,5 +1,5 @@
 <template>
-  <footer class="relative z-10 border-t border-white/[0.06]">
+  <footer class="relative z-10 border-t border-white/[0.06] pb-16 md:pb-0">
     <div class="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-neon-purple/30 to-transparent" />
     <div class="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
 
