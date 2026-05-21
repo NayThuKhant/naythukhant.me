@@ -3,6 +3,8 @@ export function useAppLoading() {
   const isLoading = computed(() => count.value > 0)
 
   function track(pending: Ref<boolean>) {
+    if (import.meta.server) return
+
     watch(pending, (curr, prev) => {
       if (curr && !prev) count.value++
       else if (!curr && prev !== undefined) count.value = Math.max(0, count.value - 1)
