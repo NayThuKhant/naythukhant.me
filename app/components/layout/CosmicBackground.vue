@@ -384,5 +384,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <canvas ref="canvasEl" class="fixed inset-0 -z-10 block" />
+  <canvas ref="canvasEl" class="fixed inset-0 z-0 block" />
 </template>

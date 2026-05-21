@@ -1,11 +1,17 @@
 <script setup lang="ts">
 const { scrollFadeUp } = useAnimations()
+const route = useRoute()
+const router = useRouter()
 
 const { data: posts } = await useAsyncData('all-posts', () =>
   queryCollection('blog').order('date', 'DESC').all(),
 )
 
-const activeTag = ref<string | null>(null)
+const activeTag = ref<string | null>((route.query.category as string) || null)
+
+watch(activeTag, (val) => {
+  router.replace({ query: val ? { category: val } : {} })
+})
 
 const allTags = computed(() => {
   const seen = new Set<string>()

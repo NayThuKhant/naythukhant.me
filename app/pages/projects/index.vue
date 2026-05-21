@@ -1,12 +1,18 @@
 <script setup lang="ts">
 const { scrollFadeUp } = useAnimations()
+const route = useRoute()
+const router = useRouter()
 
 const [{ data: projects }, { data: categories }] = await Promise.all([
   useAsyncData('all-projects', () => queryCollection('projects').order('order', 'ASC').all()),
   useAsyncData('project-categories', () => queryCollection('projectCategories').order('order', 'ASC').all()),
 ])
 
-const activeCategory = ref<string | null>(null)
+const activeCategory = ref<string | null>((route.query.category as string) || null)
+
+watch(activeCategory, (val) => {
+  router.replace({ query: val ? { category: val } : {} })
+})
 
 const filtered = computed(() =>
   activeCategory.value
@@ -61,7 +67,7 @@ useSeoMeta({
             ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
           @click="activeCategory = cat.key"
-        >{{ cat.label }}</button>
+        >#{{ cat.label }}</button>
       </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">

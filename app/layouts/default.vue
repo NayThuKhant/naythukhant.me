@@ -27,7 +27,7 @@ useSeoMeta({
 </script>
 
 <template>
-  <div class="min-h-screen flex flex-col bg-void text-slate-300 font-sans relative overflow-x-hidden">
+  <div class="min-h-screen flex flex-col text-slate-300 font-sans relative overflow-x-hidden">
     <CosmicBackground />
     <AppNavbar />
     <main class="relative z-10 flex-1 pb-16 md:pb-0">

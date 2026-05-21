@@ -57,7 +57,7 @@ const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)
             ? 'bg-neon-purple/15 border-neon-purple/40 text-neon-purple shadow-neon-sm-purple'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
           @click="activeCategory = cat.key"
-        >{{ cat.label }}</button>
+        >#{{ cat.label }}</button>
       </div>
 
       <!-- Skills grid -->
