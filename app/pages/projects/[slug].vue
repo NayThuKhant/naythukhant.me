@@ -4,7 +4,16 @@ const { data: project } = await useAsyncData(`project-${route.params.slug}`, () 
   queryCollection('projects').path(`/projects/${route.params.slug}`).first(),
 )
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
-useSeoMeta({ title: `${project.value.title} | Portfolio`, description: project.value.description })
+useSeoMeta({
+  title: project.value.title,
+  description: project.value.description,
+  ogTitle: project.value.title,
+  ogDescription: project.value.description,
+  ogImage: project.value.image,
+  twitterTitle: project.value.title,
+  twitterDescription: project.value.description,
+  twitterImage: project.value.image,
+})
 </script>
 
 <template>

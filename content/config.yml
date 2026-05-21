@@ -2,6 +2,7 @@ greeting: "Hi!"
 name: Nay Thu Khant
 role: A Software Engineer
 
+siteUrl: "https://naythukhant.me"
 seoTitle: "Nay Thu Khant — Software Engineer"
 seoDescription: "Software engineer building scalable distributed systems, performant UIs, and open-source tools."
 seoImage: /og-image.png

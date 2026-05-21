@@ -21,7 +21,14 @@ const filtered = computed(() =>
     : (posts.value ?? []),
 )
 
-useSeoMeta({ title: 'Blog | Portfolio', description: 'Writing on software engineering, tools, and the craft.' })
+useSeoMeta({
+  title: 'Blog',
+  description: 'Writing on software engineering, tools, and the craft.',
+  ogTitle: 'Blog',
+  ogDescription: 'Writing on software engineering, tools, and the craft.',
+  twitterTitle: 'Blog',
+  twitterDescription: 'Writing on software engineering, tools, and the craft.',
+})
 </script>
 
 <template>

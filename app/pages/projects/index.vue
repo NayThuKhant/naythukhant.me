@@ -14,7 +14,14 @@ const filtered = computed(() =>
     : (projects.value ?? []),
 )
 
-useSeoMeta({ title: 'Projects | Portfolio', description: 'Open-source and personal projects spanning the full stack.' })
+useSeoMeta({
+  title: 'Projects',
+  description: 'Open-source and personal projects spanning the full stack.',
+  ogTitle: 'Projects',
+  ogDescription: 'Open-source and personal projects spanning the full stack.',
+  twitterTitle: 'Projects',
+  twitterDescription: 'Open-source and personal projects spanning the full stack.',
+})
 </script>
 
 <template>

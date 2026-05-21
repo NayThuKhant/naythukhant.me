@@ -9,6 +9,7 @@ export default defineContentConfig({
         greeting: z.string().optional(),
         name: z.string(),
         role: z.string(),
+        siteUrl: z.string().optional(),
         seoTitle: z.string().optional(),
         seoDescription: z.string().optional(),
         seoImage: z.string().optional(),
