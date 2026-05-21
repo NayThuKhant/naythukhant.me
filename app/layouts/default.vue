@@ -1,3 +1,20 @@
+<script setup lang="ts">
+const { data: config } = await useAsyncData('config', () => queryCollection('config').first())
+
+useHead({
+  titleTemplate: (title) => title ? `${title} · ${config.value?.seoTitle}` : (config.value?.seoTitle ?? ''),
+})
+
+useSeoMeta({
+  description: config.value?.seoDescription,
+  ogTitle: config.value?.seoTitle,
+  ogDescription: config.value?.seoDescription,
+  ogImage: config.value?.seoImage,
+  twitterCard: 'summary_large_image',
+  twitterSite: config.value?.twitterHandle,
+})
+</script>
+
 <template>
   <div class="min-h-screen flex flex-col bg-void text-slate-300 font-sans relative overflow-x-hidden">
     <StarBackground />

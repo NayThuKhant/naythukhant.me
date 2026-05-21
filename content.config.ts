@@ -3,13 +3,17 @@ import { defineContentConfig, defineCollection, z } from '@nuxt/content'
 export default defineContentConfig({
   collections: {
     config: defineCollection({
-      type: 'page',
+      type: 'data',
       source: 'config.md',
       schema: z.object({
         greeting: z.string().optional(),
         name: z.string(),
         role: z.string(),
         available: z.boolean().default(true),
+        seoTitle: z.string().optional(),
+        seoDescription: z.string().optional(),
+        seoImage: z.string().optional(),
+        twitterHandle: z.string().optional(),
         taglines: z.array(z.object({
           text: z.string(),
         })).default([]),

@@ -1,5 +1,4 @@
 ---
-title: Config
 available: true
 bootLines:
   - text: NAY THU KHANT — NEURAL BOOT SEQUENCE
@@ -31,9 +30,13 @@ contacts:
 greeting: Hi!
 name: Nay Thu Khant
 role: A Software Engineer
+seoDescription: Software engineer building scalable distributed systems, performant UIs, and open-source tools.
+seoImage: /og-image.png
+seoTitle: Nay Thu Khant — Software Engineer
 taglines:
   - text: Building scalable distributed systems.
   - text: Crafting beautiful, performant UIs.
   - text: Shipping open-source tools.
   - text: Exploring the edge of the stack.
+twitterHandle: "@naythukhant"
 ---
