@@ -193,15 +193,16 @@ watch(bootDone, async (done) => {
 
     </div>
 
-    <!-- Scroll cue -->
-    <div
-      v-if="bootDone"
-      class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-700 animate-bounce"
-    >
-      <span class="font-mono text-xs tracking-widest pl-[0.1em]">SCROLL</span>
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
-      </svg>
+    <!-- Scroll cue — centering and bounce must be on separate elements because
+         animate-bounce keyframes use transform: translateY() directly, which
+         overwrites -translate-x-1/2 and shifts the label to the right. -->
+    <div v-if="bootDone" class="absolute bottom-10 left-1/2 -translate-x-1/2">
+      <div class="flex flex-col items-center gap-2 text-slate-700 animate-bounce">
+        <span class="font-mono text-xs tracking-widest pl-[0.1em]">SCROLL</span>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
     </div>
   </section>
 </template>
