@@ -30,7 +30,7 @@ watch(() => route.path, () => { menuOpen.value = false })
       <!-- Logo -->
       <NuxtLink to="/" class="flex items-center gap-2 group">
         <span class="font-mono text-xs text-neon-blue/60 group-hover:text-neon-blue transition-colors">&lt;</span>
-        <span class="font-display font-bold text-base text-white group-hover:text-neon-blue transition-colors tracking-wide">PORTFOLIO</span>
+        <span class="font-display font-bold text-base text-white group-hover:text-neon-blue transition-colors tracking-wide">NAY THU KHANT</span>
         <span class="font-mono text-xs text-neon-purple/60 group-hover:text-neon-purple transition-colors">/&gt;</span>
       </NuxtLink>
 

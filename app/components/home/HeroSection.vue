@@ -130,17 +130,6 @@ watch(bootDone, async (done) => {
           v-if="bootDone"
           class="w-full max-w-4xl mx-auto text-center"
         >
-          <!-- Status badge — Y-only motion, parent handles opacity -->
-          <div
-            v-motion
-            :initial="{ y: 20 }"
-            :enter="{ y: 0, transition: { duration: 500 } }"
-            class="inline-flex items-center gap-2 mb-8 px-4 py-1.5 rounded-full glass-hud font-mono text-xs text-neon-emerald border-neon-emerald/20"
-          >
-            <span class="w-1.5 h-1.5 rounded-full bg-neon-emerald animate-pulse" />
-            AVAILABLE FOR WORK
-          </div>
-
           <!-- Name -->
           <h1
             v-motion

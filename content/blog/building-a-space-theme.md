@@ -1,8 +1,12 @@
 ---
 title: Building a Space-Themed UI Without Burning the GPU
 date: 2025-03-10
+description: Particle effects look great in demos. They look terrible in production when your GPU fan spins up and the rest of the page janks. Here's the approach I settled on after three rewrites.
 summary: How I got animated starfields, neon glows, and particle effects running at 60 fps using canvas, CSS containment, and a few smart trade-offs.
-tags: [css, performance, animation]
+tags:
+  - css
+  - performance
+  - animation
 ---
 
 Particle effects look great in demos. They look terrible in production when your GPU fan spins up and the rest of the page janks. Here's the approach I settled on after three rewrites.

@@ -1,6 +1,7 @@
 ---
 title: QueryKit
 description: A type-safe, zero-dependency query builder for PostgreSQL in TypeScript. Compose SQL fluently without an ORM.
+category: library
 tags: [TypeScript, PostgreSQL, OSS]
 github: https://github.com
 liveLink: https://example.com

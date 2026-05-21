@@ -2,8 +2,6 @@ export type { BlogCollectionItem as Post, ProjectsCollectionItem as Project, Con
 
 export type ComponentSize = 'sm' | 'md'
 
-export type SkillCategory = 'language' | 'frontend' | 'backend' | 'devops' | 'tools'
-
 export interface BootLine {
   text: string
   suffix?: string

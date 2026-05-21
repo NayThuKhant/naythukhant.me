@@ -1,6 +1,7 @@
 ---
 title: Space Explorer
 description: A real-time 3D visualization of the solar system built with Three.js and WebGL, running at 60 fps in the browser.
+category: web
 tags: [TypeScript, Three.js, WebGL, Vue]
 github: https://github.com
 liveLink: https://example.com

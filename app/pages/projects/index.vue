@@ -1,23 +1,16 @@
 <script setup lang="ts">
 const { scrollFadeUp } = useAnimations()
 
-const { data: projects } = await useAsyncData('all-projects', () =>
-  queryCollection('projects').order('order', 'ASC').all(),
-)
+const [{ data: projects }, { data: categories }] = await Promise.all([
+  useAsyncData('all-projects', () => queryCollection('projects').order('order', 'ASC').all()),
+  useAsyncData('project-categories', () => queryCollection('projectCategories').order('order', 'ASC').all()),
+])
 
-const activeTag = ref<string | null>(null)
-
-const allTags = computed(() => {
-  const seen = new Set<string>()
-  for (const project of projects.value ?? []) {
-    for (const tag of project.tags ?? []) seen.add(tag)
-  }
-  return [...seen].sort()
-})
+const activeCategory = ref<string | null>(null)
 
 const filtered = computed(() =>
-  activeTag.value
-    ? (projects.value ?? []).filter(p => p.tags?.includes(activeTag.value!))
+  activeCategory.value
+    ? (projects.value ?? []).filter(p => p.category === activeCategory.value)
     : (projects.value ?? []),
 )
 
@@ -41,27 +34,27 @@ useSeoMeta({ title: 'Projects | Portfolio', description: 'Open-source and person
         </p>
       </div>
 
-      <!-- Tag filter -->
+      <!-- Category filter -->
       <div
-        v-if="allTags.length"
+        v-if="categories?.length"
         class="flex flex-wrap gap-2 mb-10"
       >
         <button
-          class="px-3 py-1 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeTag === null
+          class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
+          :class="activeCategory === null
             ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeTag = null"
+          @click="activeCategory = null"
         >ALL</button>
         <button
-          v-for="tag in allTags"
-          :key="tag"
-          class="px-3 py-1 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
-          :class="activeTag === tag
+          v-for="cat in categories"
+          :key="cat.key"
+          class="px-3 py-1.5 rounded-lg font-mono text-xs tracking-widest uppercase border transition-all duration-300"
+          :class="activeCategory === cat.key
             ? 'bg-neon-blue/15 border-neon-blue/40 text-neon-blue'
             : 'bg-transparent border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300'"
-          @click="activeTag = tag"
-        >{{ tag }}</button>
+          @click="activeCategory = cat.key"
+        >{{ cat.label }}</button>
       </div>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -69,7 +62,7 @@ useSeoMeta({ title: 'Projects | Portfolio', description: 'Open-source and person
       </div>
 
       <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">
-        No projects found for <span class="text-neon-blue">{{ activeTag }}</span>.
+        No projects in <span class="text-neon-blue">{{ categories?.find(c => c.key === activeCategory)?.label }}</span> yet.
       </p>
     </div>
   </div>
