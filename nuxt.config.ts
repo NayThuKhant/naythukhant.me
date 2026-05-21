@@ -27,6 +27,7 @@ export default defineNuxtConfig({
     head: {
       script: [
         { src: '/_vercel/speed-insights/script.js', defer: true },
+        { src: '/_vercel/insights/script.js', defer: true },
       ],
       link: [
         { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
