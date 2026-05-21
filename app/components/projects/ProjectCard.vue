@@ -31,7 +31,7 @@ const gradientIndex = computed(() => {
   >
     <!-- Image / gradient header -->
     <div class="relative h-44 overflow-hidden">
-      <img
+      <NuxtImg
         v-if="project.image"
         :src="project.image"
         :alt="project.title"

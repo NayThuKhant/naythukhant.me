@@ -1,8 +1,13 @@
 <script setup lang="ts">
 const { scrollFadeUp } = useAnimations()
-const { data: posts } = await useAsyncData('featured-posts', () =>
-  queryCollection('blog').where('featured', '=', true).order('stem', 'ASC').all(),
-)
+const [{ data: posts }, { data: page }] = await Promise.all([
+  useAsyncData('featured-posts', () =>
+    queryCollection('blog').where('featured', '=', true).order('stem', 'ASC').all(),
+  ),
+  useAsyncData('page-blog', () =>
+    queryCollection('pages').path('/blog').first(),
+  ),
+])
 </script>
 
 <template>
@@ -17,7 +22,7 @@ const { data: posts } = await useAsyncData('featured-posts', () =>
       >
         <div>
           <p class="hud-label mb-3">FEATURED WRITINGS</p>
-          <h2 class="font-display font-bold text-4xl md:text-5xl text-white">Blog</h2>
+          <h2 class="font-display font-bold text-4xl md:text-5xl text-white">{{ page?.title }}</h2>
         </div>
         <NuxtLink
           to="/blog"

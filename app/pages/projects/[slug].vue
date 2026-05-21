@@ -35,7 +35,12 @@ useSeoMeta({
       </NuxtLink>
 
       <!-- Header -->
-      <div class="glass-hud p-8 mb-10">
+      <div class="glass-hud overflow-hidden mb-10">
+        <div v-if="project!.image" class="relative h-56 md:h-72 overflow-hidden">
+          <NuxtImg :src="project!.image" :alt="project!.title" class="w-full h-full object-cover" />
+          <div class="absolute inset-0 bg-gradient-to-t from-[#030712]/80 via-transparent to-transparent" />
+        </div>
+        <div class="p-8">
         <p class="hud-label mb-3">PROJECT DETAIL</p>
         <h1 class="font-display font-bold text-4xl md:text-5xl text-white mb-3 leading-tight">{{ project!.title }}</h1>
         <p class="text-slate-400 text-base mb-6">{{ project!.description }}</p>
@@ -56,6 +61,7 @@ useSeoMeta({
             <Icon v-if="ln.icon" :name="ln.icon" class="w-4 h-4" />
             <span>{{ ln.title }} →</span>
           </a>
+        </div>
         </div>
       </div>
 
