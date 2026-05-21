@@ -198,7 +198,7 @@ watch(bootDone, async (done) => {
       v-if="bootDone"
       class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-700 animate-bounce"
     >
-      <span class="font-mono text-xs tracking-widest">SCROLL</span>
+      <span class="font-mono text-xs tracking-widest pl-[0.1em]">SCROLL</span>
       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 9l-7 7-7-7" />
       </svg>
