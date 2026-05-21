@@ -1,5 +1,20 @@
----
 available: true
+
+greeting: "Hi!"
+name: Nay Thu Khant
+role: A Software Engineer
+
+seoTitle: "Nay Thu Khant — Software Engineer"
+seoDescription: "Software engineer building scalable distributed systems, performant UIs, and open-source tools."
+seoImage: /og-image.png
+twitterHandle: "@naythukhant"
+
+taglines:
+  - text: Building scalable distributed systems.
+  - text: Crafting beautiful, performant UIs.
+  - text: Shipping open-source tools.
+  - text: Exploring the edge of the stack.
+
 bootLines:
   - text: NAY THU KHANT — NEURAL BOOT SEQUENCE
     type: header
@@ -17,6 +32,7 @@ bootLines:
     type: sys
   - text: ">>> All systems nominal. Welcome, Engineer."
     type: done
+
 contacts:
   - label: GitHub
     url: https://github.com/NayThuKhant
@@ -27,16 +43,3 @@ contacts:
   - label: Email
     url: mailto:sysadmin@onenex.co
     icon: email
-greeting: Hi!
-name: Nay Thu Khant
-role: A Software Engineer
-seoDescription: Software engineer building scalable distributed systems, performant UIs, and open-source tools.
-seoImage: /og-image.png
-seoTitle: Nay Thu Khant — Software Engineer
-taglines:
-  - text: Building scalable distributed systems.
-  - text: Crafting beautiful, performant UIs.
-  - text: Shipping open-source tools.
-  - text: Exploring the edge of the stack.
-twitterHandle: "@naythukhant"
----

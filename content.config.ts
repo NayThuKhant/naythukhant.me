@@ -4,7 +4,7 @@ export default defineContentConfig({
   collections: {
     config: defineCollection({
       type: 'data',
-      source: 'config.md',
+      source: 'config.yml',
       schema: z.object({
         greeting: z.string().optional(),
         name: z.string(),
