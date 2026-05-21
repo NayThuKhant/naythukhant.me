@@ -13,15 +13,15 @@ if (!post.value) throw createError({ statusCode: 404, message: 'Post not found' 
 const formattedDate = computed(() =>
   new Date(post.value!.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
 )
+
 useSeoMeta({
-  title: post.value.title,
-  description: post.value.summary,
-  ogTitle: post.value.title,
-  ogDescription: post.value.summary,
-  ogImage: post.value.coverImage,
-  twitterTitle: post.value.title,
-  twitterDescription: post.value.summary,
-  twitterImage: post.value.coverImage,
+  title: post.value?.title,
+  description: post.value?.description,
+  ogTitle: post.value?.title,
+  ogDescription: post.value?.description,
+  twitterTitle: post.value?.title,
+  twitterDescription: post.value?.description,
+  twitterCard: 'summary_large_image',
 })
 </script>
 

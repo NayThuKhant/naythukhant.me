@@ -10,14 +10,13 @@ const { data: project } = await useAsyncData(`project-${route.params.slug}`, asy
 })
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
 useSeoMeta({
-  title: project.value.title,
-  description: project.value.description,
-  ogTitle: project.value.title,
-  ogDescription: project.value.description,
-  ogImage: project.value.image,
-  twitterTitle: project.value.title,
-  twitterDescription: project.value.description,
-  twitterImage: project.value.image,
+  title: project.value?.title,
+  description: project.value?.description,
+  ogTitle: project.value?.title,
+  ogDescription: project.value?.description,
+  twitterTitle: project.value?.title,
+  twitterDescription: project.value?.description,
+  twitterCard: 'summary_large_image',
 })
 </script>
 
@@ -47,22 +46,15 @@ useSeoMeta({
 
         <div class="flex gap-4">
           <a
-            v-if="project!.github"
-            :href="project!.github"
+            v-for="ln in project!.links"
+            :key="ln.link"
+            :href="ln.link"
             target="_blank"
             rel="noopener"
-            class="btn-neon-purple text-sm"
+            class="btn-neon-purple text-sm flex items-center gap-2"
           >
-            GitHub →
-          </a>
-          <a
-            v-if="project!.liveLink"
-            :href="project!.liveLink"
-            target="_blank"
-            rel="noopener"
-            class="btn-neon-blue text-sm"
-          >
-            Live Demo →
+            <Icon v-if="ln.icon" :name="ln.icon" class="w-4 h-4" />
+            <span>{{ ln.title }} →</span>
           </a>
         </div>
       </div>

@@ -7,16 +7,14 @@ const { data: posts } = await useAsyncData('all-posts', () =>
   queryCollection('blog').order('stem', 'ASC').all(),
 )
 
-// Load editable page-level SEO/meta from content/pages/blog.md (if present)
-// Load page metadata for the blog index. We look up by title because pages no longer require `slug`.
-const { data: pageMeta } = await useAsyncData('page-meta-blog', () =>
-  queryCollection('pages').where('title', '=', 'Blog').first(),
+const { data: page } = await useAsyncData('page-blog', () =>
+  queryCollection('pages').path(route.path).first(),
 )
 
 const activeTag = ref<string | null>((route.query.tag as string) || null)
 
-const pageTitle = computed(() => pageMeta.value?.title ?? 'Blog')
-const pageDescription = computed(() => pageMeta.value?.description ?? 'Thoughts on software engineering, open source, and the tools I use to build things.')
+const pageTitle = computed(() => page.value?.title)
+const pageDescription = computed(() => page.value?.description)
 
 watch(activeTag, (val) => {
   router.replace({ query: val ? { tag: val } : {} })
@@ -37,12 +35,12 @@ const filtered = computed(() =>
 )
 
 useSeoMeta({
-  title: pageMeta.value?.title ?? pageTitle.value,
-  description: pageMeta.value?.description ?? pageDescription.value,
-  ogTitle: pageMeta.value?.title ?? pageTitle.value,
-  ogDescription: pageMeta.value?.description ?? pageDescription.value,
-  twitterTitle: pageMeta.value?.title ?? pageTitle.value,
-  twitterDescription: pageMeta.value?.description ?? pageDescription.value,
+  ...page.value?.seo,
+  ogTitle: page.value?.title,
+  ogDescription: page.value?.description,
+  twitterTitle: page.value?.title,
+  twitterDescription: page.value?.description,
+  twitterCard: 'summary_large_image',
 })
 </script>
 

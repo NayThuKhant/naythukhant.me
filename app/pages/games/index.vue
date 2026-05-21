@@ -1,19 +1,22 @@
 <script setup lang="ts">
 const { scrollFadeUp, staggered } = useAnimations()
 const { games } = useGames()
+const route = useRoute()
 
-// Load editable page-level SEO/meta from content/pages/games.md (if present)
-// Load page metadata for the games index. We look up by title because pages no longer require `slug`.
-const { data: pageMeta } = await useAsyncData('page-meta-games', () =>
-  queryCollection('pages').where('title', '=', 'Game Center').first(),
+const { data: page } = await useAsyncData('page-games', () =>
+  queryCollection('pages').path(route.path).first(),
 )
 
-const pageTitle = computed(() => pageMeta.value?.title ?? 'Game Center')
-const pageDescription = computed(() => pageMeta.value?.description ?? 'Lightweight browser games. Click any card to launch.')
+const pageTitle = computed(() => page.value?.title)
+const pageDescription = computed(() => page.value?.description)
 
 useSeoMeta({
-  title: pageMeta.value?.title ?? pageTitle.value,
-  description: pageMeta.value?.description ?? pageDescription.value,
+  ...page.value?.seo,
+  ogTitle: page.value?.title,
+  ogDescription: page.value?.description,
+  twitterTitle: page.value?.title,
+  twitterDescription: page.value?.description,
+  twitterCard: 'summary_large_image',
 })
 </script>
 

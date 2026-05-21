@@ -28,13 +28,8 @@ contacts:
 greeting: Hi! I'am
 name: Nay Thu Khant
 role: A Software Engineer
-seoDescription: Software engineer building scalable distributed systems, performant UIs, and open-source tools.
-seoImage: /favicon.ico
-seoTitle: Nay Thu Khant
-siteUrl: https://naythukhant.me
 taglines:
   - text: Building scalable distributed systems.
   - text: Crafting beautiful, performant UIs.
   - text: Shipping open-source tools.
   - text: Exploring the edge of the stack.
-twitterHandle: "@naythukhant"

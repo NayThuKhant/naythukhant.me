@@ -10,11 +10,6 @@ export default defineContentConfig({
         greeting: z.string().optional(),
         name: z.string(),
         role: z.string(),
-        siteUrl: z.string().optional(),
-        seoTitle: z.string().optional(),
-        seoDescription: z.string().optional(),
-        seoImage: z.string().optional(),
-        twitterHandle: z.string().optional(),
         taglines: z.array(z.object({
           text: z.string(),
         })).default([]),
@@ -58,18 +53,28 @@ export default defineContentConfig({
         title: z.string(),
         description: z.string(),
         tags: z.array(z.string()).default([]),
-        github: z.string().optional(),
-        liveLink: z.string().optional(),
+        links: z.array(z.object({
+          title: z.string(),
+          link: z.string(),
+          icon: z.string().optional(),
+        })).default([]),
         image: z.string().optional(),
         featured: z.boolean().default(false),
       }),
     }),
     pages: defineCollection({
       type: 'page',
-      source: 'pages/*.md',
+      source: '*.md',
       schema: z.object({
         title: z.string(),
         description: z.string().optional(),
+        seo: z.intersection(
+          z.object({
+            title: z.string(),
+            description: z.string()
+          }),
+          z.record(z.string(), z.any()),
+        ),
       }),
     }),
   },

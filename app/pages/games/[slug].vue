@@ -7,10 +7,13 @@ const game = computed(() => getGameBySlug(String(route.params.slug)))
 if (!game.value) throw createError({ statusCode: 404, message: 'Game not found' })
 
 useSeoMeta({
-  title: `${game.value.name} · Game Center`,
-  description: game.value.desc,
-  ogTitle: game.value.name,
-  ogDescription: game.value.desc,
+  title: game.value?.name,
+  description: game.value?.desc,
+  ogTitle: game.value?.name,
+  ogDescription: game.value?.desc,
+  twitterTitle: game.value?.name,
+  twitterDescription: game.value?.desc,
+  twitterCard: 'summary_large_image',
 })
 </script>
 

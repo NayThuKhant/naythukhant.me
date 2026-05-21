@@ -5,10 +5,12 @@ import useConfig from '~/composables/useConfig'
 const { data: config } = await useConfig()
 const route = useRoute()
 
-const canonicalUrl = computed(() => (config.value?.siteUrl ?? '') + route.path)
+const { data: page } = await useAsyncData('page-meta-home', () =>
+  queryCollection('pages').path('/').first(),
+)
 
 useHead({
-  titleTemplate: (title) => title ? `${title} · ${config.value?.seoTitle}` : (config.value?.seoTitle ?? ''),
+  titleTemplate: (title) => title ? `${title} · ${page.value?.title ?? ''}` : (page.value?.title ?? ''),
   htmlAttrs: { lang: 'en' },
   link: [
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
@@ -16,16 +18,12 @@ useHead({
 })
 
 useSeoMeta({
-  description: config.value?.seoDescription,
-  ogUrl: canonicalUrl,
-  ogTitle: config.value?.seoTitle,
-  ogDescription: config.value?.seoDescription,
-  ogImage: config.value?.seoImage,
+  ...page.value?.seo,
+  ogTitle: page.value?.title,
+  ogDescription: page.value?.description,
+  twitterTitle: page.value?.title,
+  twitterDescription: page.value?.description,
   twitterCard: 'summary_large_image',
-  twitterSite: config.value?.twitterHandle,
-  twitterTitle: config.value?.seoTitle,
-  twitterDescription: config.value?.seoDescription,
-  twitterImage: config.value?.seoImage,
 })
 </script>
 
