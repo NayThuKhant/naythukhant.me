@@ -1,5 +1,13 @@
 export type { BlogCollectionItem as Post, ProjectsCollectionItem as Project } from '@nuxt/content'
 
+export enum ControlLayout {
+  LrFire = 'lr-fire',
+  Lr     = 'lr',
+  Tap    = 'tap',
+  Dpad   = 'dpad',
+  None   = 'none',
+}
+
 export enum ComponentSize {
   Sm = 'sm',
   Md = 'md',

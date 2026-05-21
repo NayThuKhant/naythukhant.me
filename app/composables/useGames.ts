@@ -1,4 +1,5 @@
 import type { Component } from 'vue'
+import { ControlLayout } from '~/types'
 import {
   AsteroidDodge,
   BreakoutGame,
@@ -26,6 +27,7 @@ export interface GameEntry {
   genre: string
   color: 'neon-blue' | 'neon-emerald' | 'neon-purple' | 'neon-pink'
   component: Component
+  controls: ControlLayout
 }
 
 export const games: GameEntry[] = [
@@ -37,6 +39,7 @@ export const games: GameEntry[] = [
     genre: 'ARCADE',
     color: 'neon-blue',
     component: SpaceInvaders,
+    controls: ControlLayout.LrFire,
   },
   {
     slug: 'asteroid-dodge',
@@ -46,6 +49,7 @@ export const games: GameEntry[] = [
     genre: 'SURVIVAL',
     color: 'neon-emerald',
     component: AsteroidDodge,
+    controls: ControlLayout.Lr,
   },
   {
     slug: 'flappy-rocket',
@@ -55,6 +59,7 @@ export const games: GameEntry[] = [
     genre: 'ONE-TAP',
     color: 'neon-purple',
     component: FlappyRocket,
+    controls: ControlLayout.Tap,
   },
   {
     slug: 'cosmic-breakout',
@@ -64,6 +69,7 @@ export const games: GameEntry[] = [
     genre: 'ARCADE',
     color: 'neon-pink',
     component: BreakoutGame,
+    controls: ControlLayout.Lr,
   },
   {
     slug: 'neon-snake',
@@ -73,6 +79,7 @@ export const games: GameEntry[] = [
     genre: 'CLASSIC',
     color: 'neon-emerald',
     component: SnakeGame,
+    controls: ControlLayout.Dpad,
   },
   {
     slug: '2048',
@@ -82,6 +89,7 @@ export const games: GameEntry[] = [
     genre: 'PUZZLE',
     color: 'neon-blue',
     component: Game2048,
+    controls: ControlLayout.Dpad,
   },
   {
     slug: 'planet-memory',
@@ -91,6 +99,7 @@ export const games: GameEntry[] = [
     genre: 'PUZZLE',
     color: 'neon-purple',
     component: MemoryMatch,
+    controls: ControlLayout.None,
   },
 ]
 

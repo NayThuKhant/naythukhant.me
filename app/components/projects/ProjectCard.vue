@@ -57,11 +57,6 @@ const gradientIndex = computed(() => {
       <!-- Overlay gradient -->
       <div class="absolute inset-0 bg-gradient-to-t from-[#030712] via-transparent to-transparent" />
 
-      <!-- Corner badge -->
-      <div class="absolute top-3 right-3 font-mono text-[10px] px-2 py-0.5 rounded
-        bg-void/70 border border-white/10 text-neon-blue/70 backdrop-blur-sm">
-        PROJECT
-      </div>
     </div>
 
     <!-- Card body -->
