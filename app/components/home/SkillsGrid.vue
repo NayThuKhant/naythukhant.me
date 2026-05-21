@@ -15,14 +15,6 @@ const filtered = computed(() =>
 )
 
 const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)))
-
-const barColor: Record<string, string> = {
-  language: 'bg-neon-blue',
-  frontend: 'bg-neon-purple',
-  backend: 'bg-neon-emerald',
-  devops: 'bg-neon-pink',
-  tools: 'bg-neon-blue',
-}
 </script>
 
 <template>
@@ -78,30 +70,13 @@ const barColor: Record<string, string> = {
           :visible-once="skillMotion[index]!.visibleOnce"
           class="glass-card p-4 flex flex-col items-center gap-3 cursor-default group"
         >
+          <Icon
+            :name="skill.icon"
+            class="w-8 h-8 text-slate-400 group-hover:text-white transition-colors duration-300"
+          />
           <span class="font-mono text-xs font-medium text-slate-300 group-hover:text-white transition-colors text-center leading-tight">
             {{ skill.name }}
           </span>
-
-          <div class="w-full">
-            <div class="h-1 w-full bg-white/5 rounded-full overflow-hidden">
-              <div
-                class="h-full rounded-full transition-all duration-700"
-                :class="barColor[skill.category] ?? 'bg-neon-blue'"
-                :style="{ width: `${(skill.level / 5) * 100}%`, opacity: '0.7' }"
-              />
-            </div>
-          </div>
-
-          <div class="flex gap-1">
-            <span
-              v-for="i in 5"
-              :key="i"
-              class="w-1.5 h-1.5 rounded-full transition-colors duration-300"
-              :class="i <= skill.level
-                ? (barColor[skill.category] ?? 'bg-neon-blue') + ' opacity-80'
-                : 'bg-white/10'"
-            />
-          </div>
         </div>
       </div>
 

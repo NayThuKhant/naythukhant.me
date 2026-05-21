@@ -1,4 +1,4 @@
 name: Docker
+icon: simple-icons:docker
 category: devops
-level: 4
 order: 13

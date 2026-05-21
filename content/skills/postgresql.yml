@@ -1,4 +1,4 @@
 name: PostgreSQL
+icon: simple-icons:postgresql
 category: backend
-level: 4
 order: 10

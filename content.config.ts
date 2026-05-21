@@ -35,8 +35,8 @@ export default defineContentConfig({
       source: 'skills/*.yml',
       schema: z.object({
         name: z.string(),
+        icon: z.string(),
         category: z.string(),
-        level: z.number().min(1).max(5),
         order: z.number().default(99),
       }),
     }),
