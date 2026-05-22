@@ -6,6 +6,7 @@ interface Card {
   planet: PlanetName
   flipped: boolean
   matched: boolean
+  justMatched: boolean
 }
 
 const PLANET_COLORS: Record<PlanetName, string> = {
@@ -33,7 +34,7 @@ function buildDeck(): Card[] {
     const j = Math.floor(Math.random() * (i + 1))
     ;[pairs[i], pairs[j]] = [pairs[j]!, pairs[i]!]
   }
-  return pairs.map((planet, id) => ({ id, planet, flipped: false, matched: false }))
+  return pairs.map((planet, id) => ({ id, planet, flipped: false, matched: false, justMatched: false }))
 }
 
 function startGame() {
@@ -57,12 +58,18 @@ function flip(card: Card) {
   locked.value = true
   const [a, b] = [open[0]!, open[1]!]
   if (a.planet === b.planet) {
-    a.matched = b.matched = true
-    locked.value = false
-    if (cards.value.every(c => c.matched)) {
-      clearInterval(timer)
-      state.value = 'won'
-    }
+    // Brief delay so user sees both cards face-up, then mark matched with pop animation
+    setTimeout(() => {
+      a.matched = b.matched = true
+      a.justMatched = b.justMatched = true
+      locked.value = false
+      // Clear justMatched after pop animation
+      setTimeout(() => { a.justMatched = b.justMatched = false }, 420)
+      if (cards.value.every(c => c.matched)) {
+        clearInterval(timer)
+        state.value = 'won'
+      }
+    }, 200)
   } else {
     setTimeout(() => {
       a.flipped = b.flipped = false
@@ -108,30 +115,87 @@ onUnmounted(() => clearInterval(timer))
     </div>
 
     <div v-else class="grid grid-cols-4 gap-2">
-      <button
+      <div
         v-for="card in cards"
         :key="card.id"
-        class="w-16 h-16 rounded-xl border transition-all duration-300 flex flex-col items-center justify-center gap-0.5"
-        :class="card.matched
-          ? 'border-white/5 bg-white/[0.02] cursor-default opacity-40'
-          : card.flipped
-            ? 'border-white/20 bg-white/[0.06] cursor-default'
-            : 'border-white/10 bg-white/[0.03] hover:border-white/20 hover:bg-white/[0.06] cursor-pointer'"
+        class="card-flip-wrapper w-16 h-16"
+        :class="{ 'is-flipped': card.flipped || card.matched }"
         @click="flip(card)"
       >
-        <template v-if="card.flipped || card.matched">
-          <span
-            class="w-5 h-5 rounded-full"
-            :style="{ background: PLANET_COLORS[card.planet], boxShadow: `0 0 8px ${PLANET_COLORS[card.planet]}` }"
-          />
-          <span class="font-mono text-[9px] text-slate-400 leading-none">{{ card.planet }}</span>
-        </template>
-        <template v-else>
-          <span class="font-mono text-lg text-slate-700">?</span>
-        </template>
-      </button>
+        <!-- Card inner (rotates) -->
+        <div
+          class="card-flip-inner w-full h-full"
+          :class="card.matched ? 'cursor-default' : (card.flipped ? 'cursor-default' : 'cursor-pointer')"
+        >
+          <!-- Back face -->
+          <div
+            class="card-face card-back rounded-xl border border-white/10 bg-white/[0.03] flex items-center justify-center hover:border-white/20 hover:bg-white/[0.06] transition-colors"
+          >
+            <span class="font-mono text-lg text-slate-700">?</span>
+          </div>
+
+          <!-- Front face -->
+          <div
+            class="card-face card-front rounded-xl border flex flex-col items-center justify-center gap-0.5 transition-all duration-200"
+            :class="[
+              card.matched ? 'border-white/5 bg-white/[0.02] opacity-40' : 'border-white/20 bg-white/[0.06]',
+              card.justMatched ? 'card-pop' : '',
+            ]"
+          >
+            <span
+              class="w-5 h-5 rounded-full"
+              :style="{ background: PLANET_COLORS[card.planet], boxShadow: `0 0 8px ${PLANET_COLORS[card.planet]}` }"
+            />
+            <span class="font-mono text-[9px] text-slate-400 leading-none">{{ card.planet }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <p v-if="state === 'playing'" class="font-mono text-xs text-slate-600">Click cards to reveal • find matching planets</p>
   </div>
 </template>
+
+<style scoped>
+/* 3D card flip */
+.card-flip-wrapper {
+  perspective: 600px;
+}
+
+.card-flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-flip-wrapper.is-flipped .card-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-back {
+  transform: rotateY(0deg);
+}
+
+.card-front {
+  transform: rotateY(180deg);
+}
+
+/* Scale-pop on match */
+@keyframes card-pop {
+  0%   { transform: rotateY(180deg) scale(1); }
+  40%  { transform: rotateY(180deg) scale(1.22); }
+  70%  { transform: rotateY(180deg) scale(0.96); }
+  100% { transform: rotateY(180deg) scale(1); }
+}
+
+.card-flip-wrapper.is-flipped .card-flip-inner .card-face.card-front.card-pop {
+  animation: card-pop 0.4s ease-out;
+}
+</style>

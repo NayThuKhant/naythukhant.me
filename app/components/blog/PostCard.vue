@@ -45,7 +45,7 @@ const formattedDate = computed(() =>
       <NuxtLink :to="`/blog/${slug}`" class="after:absolute after:inset-0">{{ post.title }}</NuxtLink>
     </h2>
 
-    <p class="text-slate-500 text-xs leading-relaxed line-clamp-3 flex-1 mb-5">{{ post.summary }}</p>
+    <p class="text-slate-500 text-xs leading-relaxed line-clamp-3 flex-1 mb-5">{{ post.description }}</p>
 
     <div class="flex flex-wrap gap-1.5">
       <span

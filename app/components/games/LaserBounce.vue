@@ -25,15 +25,89 @@ interface ActiveLaser {
   dead: boolean
 }
 
+// --- Particle / popup interfaces ---
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  age: number; maxAge: number
+  color: string; size: number
+}
+interface ScorePopup {
+  x: number; y: number
+  age: number; maxAge: number
+  text: string
+}
+
 let raf = 0
 let targets: Target[] = []
 let activeLasers: ActiveLaser[] = []
-let aimAngle = -Math.PI / 2   // pointing straight up initially
+let aimAngle = -Math.PI / 2
 let aimLeft  = false
 let aimRight = false
 let lastTs   = 0
+let particles: Particle[] = []
+let popups: ScorePopup[] = []
 
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)) }
+
+function spawnParticles(x: number, y: number, color: string, n = 7) {
+  for (let i = 0; i < n; i++) {
+    const angle = Math.random() * τ
+    const spd = 2 + Math.random() * 3
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      age: 0, maxAge: 20 + Math.floor(Math.random() * 10),
+      color, size: 1.5 + Math.random() * 2.5,
+    })
+  }
+}
+
+function spawnPopup(x: number, y: number, text: string) {
+  popups.push({ x, y, age: 0, maxAge: 40, text })
+}
+
+function updateParticles() {
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy
+    p.vy += 0.06
+    p.age++
+  }
+  particles = particles.filter(p => p.age < p.maxAge)
+}
+
+function drawParticles(ctx: CanvasRenderingContext2D) {
+  if (!particles.length) return
+  ctx.save()
+  ctx.shadowBlur = 6
+  for (const p of particles) {
+    ctx.globalAlpha = 1 - p.age / p.maxAge
+    ctx.fillStyle = p.color
+    ctx.shadowColor = p.color
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.size, 0, τ)
+    ctx.fill()
+  }
+  ctx.restore()
+}
+
+function drawPopups(ctx: CanvasRenderingContext2D) {
+  if (!popups.length) return
+  ctx.save()
+  ctx.shadowColor = '#ffd700'
+  ctx.shadowBlur = 8
+  ctx.fillStyle = '#ffd700'
+  ctx.font = "bold 13px 'Courier New', monospace"
+  ctx.textAlign = 'center'
+  for (const pop of popups) {
+    ctx.globalAlpha = 1 - pop.age / pop.maxAge
+    ctx.fillText(pop.text, pop.x, pop.y - 30 * (pop.age / pop.maxAge))
+    pop.age++
+  }
+  ctx.restore()
+  popups = popups.filter(p => p.age < p.maxAge)
+}
 
 function spawnTargets() {
   const count = 5 + Math.min(3, level.value - 1)
@@ -58,7 +132,6 @@ function previewPath(startX: number, startY: number, angle: number): LaserSeg[] 
   for (let b = 0; b <= MAX_BOUNCES; b++) {
     let tMin = Infinity
     let nx = vx, ny = vy
-    // wall collisions
     if (vx > 0) { const t = (W - x) / vx; if (t > 0.01 && t < tMin) { tMin = t; nx = -vx; ny = vy } }
     if (vx < 0) { const t = (0 - x) / vx; if (t > 0.01 && t < tMin) { tMin = t; nx = -vx; ny = vy } }
     if (vy > 0) { const t = (H - y) / vy; if (t > 0.01 && t < tMin) { tMin = t; nx = vx; ny = -vy } }
@@ -93,6 +166,8 @@ function startGame() {
   shots.value = MAX_SHOTS
   activeLasers = []
   aimAngle = -Math.PI / 2
+  particles = []
+  popups = []
   spawnTargets()
   state.value = 'playing'
 }
@@ -104,6 +179,8 @@ function restart() {
   activeLasers = []
   targets = []
   aimAngle = -Math.PI / 2
+  particles = []
+  popups = []
   spawnTargets()
   state.value = 'playing'
 }
@@ -122,19 +199,33 @@ function updateLaser(laser: ActiveLaser) {
     laser.x += laser.vx / steps
     laser.y += laser.vy / steps
 
-    // Wall bounce
-    if (laser.x <= 0) { laser.x = 0; laser.vx = Math.abs(laser.vx); laser.bounces++ }
-    if (laser.x >= W) { laser.x = W; laser.vx = -Math.abs(laser.vx); laser.bounces++ }
-    if (laser.y <= 0) { laser.y = 0; laser.vy = Math.abs(laser.vy); laser.bounces++ }
-    if (laser.y >= H) { laser.y = H; laser.vy = -Math.abs(laser.vy); laser.bounces++ }
+    // Wall bounce — spawn small particles at bounce point
+    if (laser.x <= 0) {
+      laser.x = 0; laser.vx = Math.abs(laser.vx); laser.bounces++
+      spawnParticles(0, laser.y, '#00d4ff', 3)
+    }
+    if (laser.x >= W) {
+      laser.x = W; laser.vx = -Math.abs(laser.vx); laser.bounces++
+      spawnParticles(W, laser.y, '#00d4ff', 3)
+    }
+    if (laser.y <= 0) {
+      laser.y = 0; laser.vy = Math.abs(laser.vy); laser.bounces++
+      spawnParticles(laser.x, 0, '#00d4ff', 3)
+    }
+    if (laser.y >= H) {
+      laser.y = H; laser.vy = -Math.abs(laser.vy); laser.bounces++
+      spawnParticles(laser.x, H, '#00d4ff', 3)
+    }
 
-    // Target hits
     for (const t of targets) {
       if (!t.alive || t.flashFrames > 0) continue
       if ((laser.x - t.x) ** 2 + (laser.y - t.y) ** 2 <= (TARGET_R + 4) ** 2) {
         t.flashFrames = 12
         t.alive = false
         score.value++
+        // Burst of pink particles + popup on target hit
+        spawnParticles(t.x, t.y, '#f472b6', 8)
+        spawnPopup(t.x, t.y - 20, '+1')
         laser.dead = true
         break
       }
@@ -160,12 +251,10 @@ function drawEmitter(ctx: CanvasRenderingContext2D) {
   ctx.moveTo(EMITTER_X, EMITTER_Y)
   ctx.lineTo(tipX, tipY)
   ctx.stroke()
-
   ctx.fillStyle = '#a855f7'
   ctx.beginPath()
   ctx.arc(EMITTER_X, EMITTER_Y, EMITTER_R, 0, τ)
   ctx.fill()
-
   ctx.shadowBlur = 6
   ctx.fillStyle = '#ffffff'
   ctx.beginPath()
@@ -198,28 +287,20 @@ function drawTargets(ctx: CanvasRenderingContext2D) {
     const col = flash ? '#ffffff' : '#f472b6'
     ctx.shadowColor = flash ? '#ffffff' : '#f472b6'
     ctx.shadowBlur = flash ? 30 : 18
-
-    // Outer ring
     ctx.strokeStyle = col
     ctx.lineWidth = 2
     ctx.beginPath()
     ctx.arc(t.x, t.y, TARGET_R, 0, τ)
     ctx.stroke()
-
-    // Inner fill
     ctx.fillStyle = flash ? 'rgba(255,255,255,0.6)' : 'rgba(244,114,182,0.25)'
     ctx.beginPath()
     ctx.arc(t.x, t.y, TARGET_R - 3, 0, τ)
     ctx.fill()
-
-    // Center dot
     ctx.fillStyle = col
     ctx.shadowBlur = 8
     ctx.beginPath()
     ctx.arc(t.x, t.y, 4, 0, τ)
     ctx.fill()
-
-    // Cross hairs
     ctx.strokeStyle = col
     ctx.lineWidth = 1
     ctx.beginPath()
@@ -228,28 +309,41 @@ function drawTargets(ctx: CanvasRenderingContext2D) {
     ctx.moveTo(t.x, t.y - TARGET_R + 3)
     ctx.lineTo(t.x, t.y + TARGET_R - 3)
     ctx.stroke()
-
     ctx.restore()
   }
 }
 
 function drawLasers(ctx: CanvasRenderingContext2D) {
+  if (!activeLasers.length) return
+  ctx.save()
+  ctx.lineCap = 'round'
+  ctx.shadowColor = '#00d4ff'
   for (const laser of activeLasers) {
-    if (laser.trail.length < 2) continue
-    ctx.save()
-    for (let i = 1; i < laser.trail.length; i++) {
-      const a = (i / laser.trail.length)
-      ctx.strokeStyle = `rgba(0,212,255,${a * 0.85})`
-      ctx.lineWidth = laser.dead ? 1 : 2.5
-      ctx.shadowColor = '#00d4ff'
-      ctx.shadowBlur = laser.dead ? 4 : 12
+    const n = laser.trail.length
+    if (n < 2) continue
+    const dead = laser.dead
+    ctx.lineWidth = dead ? 1 : 2.5
+    const mid = Math.floor(n * 0.5)
+
+    // Faded tail — one path call
+    if (mid >= 1) {
+      ctx.strokeStyle = dead ? 'rgba(0,212,255,0.15)' : 'rgba(0,212,255,0.28)'
+      ctx.shadowBlur = dead ? 2 : 5
       ctx.beginPath()
-      ctx.moveTo(laser.trail[i - 1]!.x, laser.trail[i - 1]!.y)
-      ctx.lineTo(laser.trail[i]!.x, laser.trail[i]!.y)
+      ctx.moveTo(laser.trail[0]!.x, laser.trail[0]!.y)
+      for (let i = 1; i <= mid; i++) ctx.lineTo(laser.trail[i]!.x, laser.trail[i]!.y)
       ctx.stroke()
     }
-    ctx.restore()
+
+    // Bright head — one path call
+    ctx.strokeStyle = dead ? 'rgba(0,212,255,0.45)' : 'rgba(0,212,255,0.9)'
+    ctx.shadowBlur = dead ? 5 : 14
+    ctx.beginPath()
+    ctx.moveTo(laser.trail[mid]!.x, laser.trail[mid]!.y)
+    for (let i = mid + 1; i < n; i++) ctx.lineTo(laser.trail[i]!.x, laser.trail[i]!.y)
+    ctx.stroke()
   }
+  ctx.restore()
 }
 
 function frame(ts: number) {
@@ -259,11 +353,9 @@ function frame(ts: number) {
   const dt = lastTs === 0 ? 16 : Math.min(ts - lastTs, 50)
   lastTs = ts
 
-  // Background
   ctx.fillStyle = '#030712'
   ctx.fillRect(0, 0, W, H)
 
-  // Stars
   ctx.fillStyle = 'rgba(200,220,255,0.10)'
   for (let i = 0; i < 50; i++) {
     const sx = (i * 83 + ts * 0.002) % W
@@ -271,7 +363,6 @@ function frame(ts: number) {
     ctx.fillRect(sx, sy, 1.5, 1.5)
   }
 
-  // Wall glow borders
   ctx.save()
   ctx.strokeStyle = 'rgba(0,212,255,0.2)'
   ctx.lineWidth = 3
@@ -281,27 +372,20 @@ function frame(ts: number) {
   ctx.restore()
 
   if (state.value === 'playing') {
-    // Aim rotation
     const ROT_SPEED = 0.04
     if (aimLeft)  aimAngle = clamp(aimAngle - ROT_SPEED, -Math.PI + 0.08, -0.08)
     if (aimRight) aimAngle = clamp(aimAngle + ROT_SPEED, -Math.PI + 0.08, -0.08)
 
-    // Update lasers
     for (const laser of activeLasers) {
       if (!laser.dead) updateLaser(laser)
-      else {
-        // fade trail
-        laser.trail.shift()
-      }
+      else laser.trail.shift()
     }
     activeLasers = activeLasers.filter(l => l.trail.length > 0)
 
-    // Flash countdown
     for (const t of targets) {
       if (t.flashFrames > 0) t.flashFrames--
     }
 
-    // Check win / lose
     const alive = targets.filter(t => t.alive)
     if (alive.length === 0) {
       nextLevel()
@@ -312,29 +396,35 @@ function frame(ts: number) {
     }
   }
 
-  // Draw game elements
   drawPreview(ctx)
   drawTargets(ctx)
   drawLasers(ctx)
   if (state.value === 'playing') drawEmitter(ctx)
 
-  // Overlay for idle state only
+  // Particles + popups
+  updateParticles()
+  drawParticles(ctx)
+  drawPopups(ctx)
+
   if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    ctx.fillStyle = '#f472b6'
+    const pulse = 0.6 + 0.4 * Math.sin(ts * 0.003)
+    ctx.fillStyle = `rgba(244,114,182,${0.7 + 0.3 * pulse})`
     ctx.shadowColor = '#f472b6'
-    ctx.shadowBlur = 20
+    ctx.shadowBlur = 20 + 14 * pulse
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"
     ctx.fillText('LASER BOUNCE', W / 2, H / 2 - 32)
     ctx.shadowBlur = 0
     ctx.fillStyle = 'rgba(200,220,255,0.55)'
     ctx.font = "13px 'Courier New', monospace"
     ctx.fillText('Bounce lasers off walls to hit targets', W / 2, H / 2 + 6)
-    ctx.fillStyle = 'rgba(200,220,255,0.35)'
-    ctx.font = "12px 'Courier New', monospace"
-    ctx.fillText('Click or press Space to start', W / 2, H / 2 + 30)
+    if (Math.floor(ts / 600) % 2 === 0) {
+      ctx.fillStyle = 'rgba(200,220,255,0.35)'
+      ctx.font = "12px 'Courier New', monospace"
+      ctx.fillText('Click or press Space to start', W / 2, H / 2 + 30)
+    }
   }
 }
 
@@ -358,7 +448,6 @@ function onClick(e: MouseEvent) {
   if (state.value === 'idle') { startGame(); return }
   if (state.value === 'over') { restart(); return }
   if (state.value !== 'playing') return
-  // Aim towards click then fire
   if (!canvasEl.value) return
   const rect = canvasEl.value.getBoundingClientRect()
   const px = (e.clientX - rect.left) * (W / rect.width)

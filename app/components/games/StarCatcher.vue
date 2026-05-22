@@ -13,12 +13,21 @@ const CATCH_ZONE = SHIP_H / 2 + 6
 const τ = Math.PI * 2
 
 interface FallingObj {
-  x: number
-  y: number
-  vy: number
-  r: number
-  isBomb: boolean
-  twinkle: number
+  x: number; y: number; vy: number
+  r: number; isBomb: boolean; twinkle: number
+}
+
+// --- Particle / popup interfaces ---
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  age: number; maxAge: number
+  color: string; size: number
+}
+interface ScorePopup {
+  x: number; y: number
+  age: number; maxAge: number
+  text: string
 }
 
 let raf = 0
@@ -30,6 +39,70 @@ let speedMult = 1
 let lastTs = 0
 let leftDown = false
 let rightDown = false
+let particles: Particle[] = []
+let popups: ScorePopup[] = []
+let shipFlash = 0    // hit flash on ship (bomb catch)
+let deathAnim = 0
+
+function spawnParticles(x: number, y: number, color: string, n = 7) {
+  for (let i = 0; i < n; i++) {
+    const angle = Math.random() * τ
+    const spd = 1.5 + Math.random() * 3
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      age: 0, maxAge: 18 + Math.floor(Math.random() * 8),
+      color, size: 1.5 + Math.random() * 2.5,
+    })
+  }
+}
+
+function spawnPopup(x: number, y: number, text: string) {
+  popups.push({ x, y, age: 0, maxAge: 40, text })
+}
+
+function updateParticles() {
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy
+    p.vy += 0.06
+    p.age++
+  }
+  particles = particles.filter(p => p.age < p.maxAge)
+}
+
+function drawParticles(ctx: CanvasRenderingContext2D) {
+  for (const p of particles) {
+    const alpha = 1 - p.age / p.maxAge
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.fillStyle = p.color
+    ctx.shadowColor = p.color
+    ctx.shadowBlur = 6
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.size, 0, τ)
+    ctx.fill()
+    ctx.restore()
+  }
+}
+
+function drawPopups(ctx: CanvasRenderingContext2D) {
+  for (const pop of popups) {
+    const alpha = 1 - pop.age / pop.maxAge
+    const dy = -30 * (pop.age / pop.maxAge)
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.shadowColor = '#ffd700'
+    ctx.shadowBlur = 8
+    ctx.fillStyle = '#ffd700'
+    ctx.font = "bold 13px 'Courier New', monospace"
+    ctx.textAlign = 'center'
+    ctx.fillText(pop.text, pop.x, pop.y + dy)
+    ctx.restore()
+    pop.age++
+  }
+  popups = popups.filter(p => p.age < p.maxAge)
+}
 
 function newObject(): FallingObj {
   const isBomb = Math.random() < 0.28
@@ -38,8 +111,7 @@ function newObject(): FallingObj {
     x: r + Math.random() * (W - r * 2),
     y: -r * 2,
     vy: (1.5 + Math.random() * 1.2) * speedMult,
-    r,
-    isBomb,
+    r, isBomb,
     twinkle: Math.random() * τ,
   }
 }
@@ -62,43 +134,46 @@ function drawShip(ctx: CanvasRenderingContext2D, ts: number) {
   ctx.shadowColor = '#00d4ff'
   ctx.shadowBlur = 14 + 6 * pulse
   ctx.fillStyle = '#00d4ff'
-
-  // Main body: triangle pointing up
   ctx.beginPath()
   ctx.moveTo(cx, sy - SHIP_H / 2)
   ctx.lineTo(cx - SHIP_W / 2, sy + SHIP_H / 2)
   ctx.lineTo(cx + SHIP_W / 2, sy + SHIP_H / 2)
   ctx.closePath()
   ctx.fill()
-
-  // Cockpit accent
   ctx.shadowBlur = 6
   ctx.fillStyle = 'rgba(180,240,255,0.9)'
   ctx.beginPath()
   ctx.arc(cx, sy - 2, 5, 0, τ)
   ctx.fill()
-
-  // Engine glow at base
   ctx.shadowColor = '#a855f7'
   ctx.shadowBlur = 10
   ctx.fillStyle = '#a855f7'
   ctx.beginPath()
   ctx.ellipse(cx, sy + SHIP_H / 2 + 4, 8, 4, 0, 0, τ)
   ctx.fill()
+  // Hit flash
+  if (shipFlash > 0) {
+    ctx.globalAlpha = 0.7 * (shipFlash / 5)
+    ctx.fillStyle = '#ffffff'
+    ctx.shadowColor = '#ffffff'
+    ctx.shadowBlur = 20
+    ctx.beginPath()
+    ctx.arc(cx, sy, SHIP_W / 2 + 4, 0, τ)
+    ctx.fill()
+    ctx.globalAlpha = 1
+  }
   ctx.restore()
 }
 
 function drawObject(ctx: CanvasRenderingContext2D, obj: FallingObj, ts: number) {
   ctx.save()
   if (obj.isBomb) {
-    // Red/pink bomb
     ctx.shadowColor = '#f472b6'
     ctx.shadowBlur = 16
     ctx.fillStyle = '#f472b6'
     ctx.beginPath()
     ctx.arc(obj.x, obj.y, obj.r, 0, τ)
     ctx.fill()
-    // Skull dots
     ctx.shadowBlur = 0
     ctx.fillStyle = '#030712'
     ctx.beginPath()
@@ -109,11 +184,9 @@ function drawObject(ctx: CanvasRenderingContext2D, obj: FallingObj, ts: number) 
     ctx.fill()
     ctx.fillRect(obj.x - 3, obj.y + 2, 6, 1.5)
   } else {
-    // Glowing star — neon-emerald with twinkle
     const twinkle = 0.6 + 0.4 * Math.sin(ts * 0.005 + obj.twinkle)
     ctx.shadowColor = '#00ff88'
     ctx.shadowBlur = 18 * twinkle
-    // 5-pointed star
     ctx.fillStyle = '#00ff88'
     ctx.beginPath()
     for (let i = 0; i < 5; i++) {
@@ -129,7 +202,6 @@ function drawObject(ctx: CanvasRenderingContext2D, obj: FallingObj, ts: number) 
     }
     ctx.closePath()
     ctx.fill()
-    // Center glow dot
     ctx.shadowBlur = 6
     ctx.fillStyle = 'rgba(200,255,220,0.9)'
     ctx.beginPath()
@@ -138,7 +210,6 @@ function drawObject(ctx: CanvasRenderingContext2D, obj: FallingObj, ts: number) 
   }
   ctx.restore()
 }
-
 
 function frame(ts: number) {
   raf = requestAnimationFrame(frame)
@@ -149,15 +220,12 @@ function frame(ts: number) {
 
   ctx.fillStyle = '#030712'
   ctx.fillRect(0, 0, W, H)
-
   drawStars(ctx, ts)
 
   if (state.value === 'playing') {
-    // Move ship
     if (leftDown)  shipX = Math.max(SHIP_W / 2, shipX - SHIP_SPEED * dt * 0.06)
     if (rightDown) shipX = Math.min(W - SHIP_W / 2, shipX + SHIP_SPEED * dt * 0.06)
 
-    // Spawn objects
     spawnTimer += dt
     if (spawnTimer > spawnInterval) {
       objects.push(newObject())
@@ -173,7 +241,6 @@ function frame(ts: number) {
       const obj = objects[i]!
       obj.y += obj.vy
 
-      // Check catch: within ship X and landing zone Y
       if (
         obj.y + obj.r >= shipTopY &&
         obj.y - obj.r <= shipBotY &&
@@ -182,9 +249,18 @@ function frame(ts: number) {
       ) {
         toRemove.push(i)
         if (obj.isBomb) {
+          // Bomb caught — red particles, ship flash
+          spawnParticles(obj.x, obj.y, '#f472b6', 8)
+          shipFlash = 5
           lives.value = Math.max(0, lives.value - 1)
-          if (lives.value <= 0) state.value = 'over'
+          if (lives.value <= 0) {
+            deathAnim = 1
+            state.value = 'over'
+          }
         } else {
+          // Star caught — green particles, popup
+          spawnParticles(obj.x, obj.y, '#00ff88', 7)
+          spawnPopup(obj.x, H - SHIP_H - 30, '+1')
           score.value++
           speedMult = Math.min(2.5, speedMult + 0.025)
         }
@@ -193,26 +269,56 @@ function frame(ts: number) {
       }
     }
     for (const i of toRemove) objects.splice(i, 1)
+    if (shipFlash > 0) shipFlash--
   }
 
-  // Draw objects before ship so ship is on top
   for (const obj of objects) drawObject(ctx, obj, ts)
   drawShip(ctx, ts)
+
+  // Particles + popups
+  updateParticles()
+  drawParticles(ctx)
+  drawPopups(ctx)
+
+  // Death ring
+  if (deathAnim > 0 && deathAnim <= 20) {
+    const t = deathAnim / 20
+    const sy = H - SHIP_H - 8
+    const r = 10 + t * 60
+    ctx.save()
+    ctx.globalAlpha = (1 - t) * 0.8
+    ctx.strokeStyle = '#f472b6'
+    ctx.shadowColor = '#f472b6'
+    ctx.shadowBlur = 20
+    ctx.lineWidth = 3 * (1 - t) + 1
+    ctx.beginPath()
+    ctx.arc(shipX, sy, r, 0, τ)
+    ctx.stroke()
+    ctx.restore()
+    deathAnim++
+  }
 
   // Overlays
   if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    ctx.fillStyle = '#00ff88'
+    const pulse = 0.6 + 0.4 * Math.sin(ts * 0.003)
+    ctx.save()
+    ctx.shadowColor = '#00ff88'
+    ctx.shadowBlur  = 20 + 14 * pulse
+    ctx.fillStyle   = `rgba(0,255,136,${0.7 + 0.3 * pulse})`
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"
     ctx.fillText('STAR CATCHER', W / 2, H / 2 - 28)
+    ctx.restore()
     ctx.fillStyle = 'rgba(200,220,255,0.55)'
     ctx.font = "13px 'Courier New', monospace"
     ctx.fillText('Catch stars, dodge bombs', W / 2, H / 2 + 8)
-    ctx.fillStyle = 'rgba(200,220,255,0.35)'
-    ctx.font = "12px 'Courier New', monospace"
-    ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 30)
+    if (Math.floor(ts / 600) % 2 === 0) {
+      ctx.fillStyle = 'rgba(200,220,255,0.35)'
+      ctx.font = "12px 'Courier New', monospace"
+      ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 30)
+    }
   }
 }
 
@@ -224,6 +330,10 @@ function startGame() {
   shipX = W / 2
   score.value = 0
   lives.value = LIFE_MAX
+  particles = []
+  popups = []
+  shipFlash = 0
+  deathAnim = 0
   state.value = 'playing'
 }
 
@@ -235,6 +345,10 @@ function restart() {
   shipX = W / 2
   score.value = 0
   lives.value = LIFE_MAX
+  particles = []
+  popups = []
+  shipFlash = 0
+  deathAnim = 0
   state.value = 'playing'
 }
 

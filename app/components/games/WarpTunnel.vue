@@ -7,21 +7,99 @@ const W = 480, H = 280
 const SHIP_X = 100
 const τ = Math.PI * 2
 
-// Star layers
 interface Star { x: number; y: number; r: number; speed: number; alpha: number }
+
+// --- Particle / popup interfaces ---
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  age: number; maxAge: number
+  color: string; size: number
+}
+interface ScorePopup {
+  x: number; y: number
+  age: number; maxAge: number
+  text: string
+}
 
 let raf = 0
 let shipY = H / 2
 let shipVY = 0
 let distance = 0
-let gapY = H / 2      // center of the gap
-let gapSize = 160     // current gap height (narrows over time)
+let gapY = H / 2
+let gapSize = 160
 let waveOffset = 0
 let stars: Star[] = []
+let particles: Particle[] = []
+let popups: ScorePopup[] = []
+// Trail: last N ship positions
+let shipTrail: { x: number; y: number }[] = []
+let deathAnim = 0
+let lastScore = 0
+let lastTs = 0
+
+function spawnParticles(x: number, y: number, color: string, n = 7) {
+  for (let i = 0; i < n; i++) {
+    const angle = Math.random() * τ
+    const spd = 1.5 + Math.random() * 3
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd,
+      age: 0, maxAge: 18 + Math.floor(Math.random() * 8),
+      color, size: 1.5 + Math.random() * 2.5,
+    })
+  }
+}
+
+function spawnPopup(x: number, y: number, text: string) {
+  popups.push({ x, y, age: 0, maxAge: 40, text })
+}
+
+function updateParticles() {
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy
+    p.vy += 0.05
+    p.age++
+  }
+  particles = particles.filter(p => p.age < p.maxAge)
+}
+
+function drawParticles(ctx: CanvasRenderingContext2D) {
+  for (const p of particles) {
+    const alpha = 1 - p.age / p.maxAge
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.fillStyle = p.color
+    ctx.shadowColor = p.color
+    ctx.shadowBlur = 6
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.size, 0, τ)
+    ctx.fill()
+    ctx.restore()
+  }
+}
+
+function drawPopups(ctx: CanvasRenderingContext2D) {
+  for (const pop of popups) {
+    const alpha = 1 - pop.age / pop.maxAge
+    const dy = -30 * (pop.age / pop.maxAge)
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.shadowColor = '#ffd700'
+    ctx.shadowBlur = 8
+    ctx.fillStyle = '#ffd700'
+    ctx.font = "bold 11px 'Courier New', monospace"
+    ctx.textAlign = 'center'
+    ctx.fillText(pop.text, pop.x, pop.y + dy)
+    ctx.restore()
+    pop.age++
+  }
+  popups = popups.filter(p => p.age < p.maxAge)
+}
 
 function buildStars(): Star[] {
   const out: Star[] = []
-  // 3 parallax layers
   for (let i = 0; i < 30; i++) out.push({ x: Math.random() * W, y: Math.random() * H, r: 0.6, speed: 0.4, alpha: 0.3 })
   for (let i = 0; i < 20; i++) out.push({ x: Math.random() * W, y: Math.random() * H, r: 1.0, speed: 1.0, alpha: 0.5 })
   for (let i = 0; i < 10; i++) out.push({ x: Math.random() * W, y: Math.random() * H, r: 1.6, speed: 2.0, alpha: 0.8 })
@@ -37,9 +115,14 @@ function reset() {
   waveOffset = 0
   score.value = 0
   stars = buildStars()
+  particles = []
+  popups = []
+  shipTrail = []
+  deathAnim = 0
+  lastScore = 0
+  lastTs = 0
 }
 
-// Compute top-wall bottom edge and bottom-wall top edge at a given X
 function wallEdges(x: number, offset: number): { topBot: number; botTop: number } {
   const wave = Math.sin((x * 0.015) + offset) * 38 + Math.sin((x * 0.008) + offset * 0.7) * 18
   const center = H / 2 + wave
@@ -53,12 +136,12 @@ function frame(ts: number) {
   raf = requestAnimationFrame(frame)
   const ctx = canvasEl.value?.getContext('2d')
   if (!ctx) return
+  const dt = lastTs === 0 ? 16 : Math.min(ts - lastTs, 50)
+  lastTs = ts
 
-  // Background
   ctx.fillStyle = '#030712'
   ctx.fillRect(0, 0, W, H)
 
-  // Stars (parallax)
   for (const s of stars) {
     if (state.value === 'playing') {
       s.x -= s.speed
@@ -74,49 +157,50 @@ function frame(ts: number) {
   }
 
   if (state.value === 'playing') {
-    // Physics
     const gravity = 0.18
     const thrust = -0.45
     if (keys.up)   shipVY += thrust
     if (keys.down) shipVY += -thrust
     shipVY += gravity
-    shipVY *= 0.88  // damping
+    shipVY *= 0.88
     shipY += shipVY
     shipY = Math.max(10, Math.min(H - 10, shipY))
 
-    // Advance tunnel
+    // Record ship trail
+    shipTrail.push({ x: SHIP_X, y: shipY })
+    if (shipTrail.length > 5) shipTrail.shift()
+
     waveOffset += 0.022
     distance += 1
-    score.value = Math.floor(distance / 6)
+    const newScore = Math.floor(distance / 6)
+    if (newScore > 0 && newScore % 10 === 0 && newScore !== lastScore) {
+      spawnPopup(SHIP_X + 30, shipY - 16, `+${10}`)
+      lastScore = newScore
+    }
+    score.value = newScore
 
-    // Slowly narrow the gap
     if (gapSize > 68) gapSize -= 0.012
   }
 
   // Draw tunnel walls
-  const resolution = 4  // draw a slice every N pixels
+  const resolution = 4
   for (let x = 0; x <= W; x += resolution) {
     const { topBot, botTop } = wallEdges(x + (state.value === 'playing' ? distance : 0), waveOffset)
-
-    // Top wall gradient color
     const t = Math.min(1, distance / 1200)
     const r = Math.round(0 + t * 168)
     const g = Math.round(212 + t * (85 - 212))
     const b = Math.round(255 + t * (247 - 255))
     const glowColor = `rgb(${r},${g},${b})`
-
     ctx.save()
     ctx.shadowColor = glowColor
     ctx.shadowBlur = 8
     ctx.fillStyle = glowColor
-    // Top wall
     ctx.fillRect(x, 0, resolution + 1, topBot)
-    // Bottom wall
     ctx.fillRect(x, botTop, resolution + 1, H - botTop)
     ctx.restore()
   }
 
-  // Draw tunnel edge glow lines
+  // Tunnel edge glow lines
   ctx.save()
   ctx.lineWidth = 2
   const edgeGrad = ctx.createLinearGradient(0, 0, W, 0)
@@ -144,11 +228,30 @@ function frame(ts: number) {
   if (state.value === 'playing') {
     const { topBot, botTop } = wallEdges(SHIP_X + distance, waveOffset)
     if (shipY - 8 < topBot || shipY + 8 > botTop) {
+      deathAnim = 1
+      spawnParticles(SHIP_X, shipY, '#a855f7', 12)
       state.value = 'over'
     }
   }
 
-  // Draw ship (neon-purple glowing triangle pointing right)
+  // Draw ship trail
+  for (let i = 0; i < shipTrail.length; i++) {
+    const t = shipTrail[i]!
+    const alpha = (i / shipTrail.length) * 0.3
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.translate(t.x, t.y)
+    ctx.shadowColor = '#a855f7'
+    ctx.shadowBlur = 8
+    ctx.fillStyle = '#a855f7'
+    ctx.beginPath()
+    ctx.moveTo(14, 0); ctx.lineTo(-10, -9); ctx.lineTo(-6, 0); ctx.lineTo(-10, 9)
+    ctx.closePath()
+    ctx.fill()
+    ctx.restore()
+  }
+
+  // Draw ship
   if (state.value !== 'idle') {
     ctx.save()
     ctx.translate(SHIP_X, shipY)
@@ -162,29 +265,45 @@ function frame(ts: number) {
     ctx.lineTo(-10, 9)
     ctx.closePath()
     ctx.fill()
-    // Inner highlight
     ctx.shadowBlur = 4
     ctx.fillStyle = '#d8b4fe'
     ctx.beginPath()
-    ctx.moveTo(8, 0)
-    ctx.lineTo(-4, -4)
-    ctx.lineTo(-4, 4)
+    ctx.moveTo(8, 0); ctx.lineTo(-4, -4); ctx.lineTo(-4, 4)
     ctx.closePath()
     ctx.fill()
-    // Engine exhaust
     if (state.value === 'playing') {
       const ex = Math.random() * 8 + 4
       ctx.shadowColor = '#00d4ff'
       ctx.shadowBlur = 10
       ctx.fillStyle = `rgba(0,212,255,${0.5 + Math.random() * 0.5})`
       ctx.beginPath()
-      ctx.moveTo(-6, -3)
-      ctx.lineTo(-6 - ex, 0)
-      ctx.lineTo(-6, 3)
+      ctx.moveTo(-6, -3); ctx.lineTo(-6 - ex, 0); ctx.lineTo(-6, 3)
       ctx.closePath()
       ctx.fill()
     }
     ctx.restore()
+  }
+
+  // Particles + popups
+  updateParticles()
+  drawParticles(ctx)
+  drawPopups(ctx)
+
+  // Death expanding ring
+  if (deathAnim > 0 && deathAnim <= 20) {
+    const t = deathAnim / 20
+    const r = 10 + t * 55
+    ctx.save()
+    ctx.globalAlpha = (1 - t) * 0.8
+    ctx.strokeStyle = '#a855f7'
+    ctx.shadowColor = '#a855f7'
+    ctx.shadowBlur = 20
+    ctx.lineWidth = 3 * (1 - t) + 1
+    ctx.beginPath()
+    ctx.arc(SHIP_X, shipY, r, 0, τ)
+    ctx.stroke()
+    ctx.restore()
+    deathAnim++
   }
 
   // Overlays
@@ -192,12 +311,19 @@ function frame(ts: number) {
     ctx.fillStyle = 'rgba(3,7,18,0.80)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    ctx.fillStyle = '#00d4ff'
+    const pulse = 0.6 + 0.4 * Math.sin(ts * 0.003)
+    ctx.save()
+    ctx.shadowColor = '#00d4ff'
+    ctx.shadowBlur  = 18 + 14 * pulse
+    ctx.fillStyle   = `rgba(0,212,255,${0.7 + 0.3 * pulse})`
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"
     ctx.fillText('WARP TUNNEL', W / 2, H / 2 - 28)
-    ctx.fillStyle = 'rgba(200,220,255,0.55)'
-    ctx.font = "13px 'Courier New', monospace"
-    ctx.fillText('Press ↑ ↓ to start', W / 2, H / 2 + 10)
+    ctx.restore()
+    if (Math.floor(ts / 600) % 2 === 0) {
+      ctx.fillStyle = 'rgba(200,220,255,0.55)'
+      ctx.font = "13px 'Courier New', monospace"
+      ctx.fillText('Press ↑ ↓ to start', W / 2, H / 2 + 10)
+    }
   }
 }
 

@@ -10,7 +10,7 @@ const formattedDate = computed(() =>
 )
 
 const seoTitle = post.value?.seo?.title ?? post.value?.title
-const seoDescription = post.value?.seo?.description ?? post.value?.summary
+const seoDescription = post.value?.seo?.description ?? post.value?.description
 
 useSeoMeta({
   title: seoTitle,
@@ -46,7 +46,7 @@ useSeoMeta({
           <p class="hud-label mb-3">TRANSMISSION</p>
           <time class="font-mono text-xs text-slate-600 tracking-wide">{{ formattedDate }}</time>
           <h1 class="font-display font-bold text-3xl md:text-4xl text-white mt-3 mb-4 leading-tight">{{ post!.title }}</h1>
-          <p class="text-slate-400">{{ post!.summary }}</p>
+          <p class="text-slate-400">{{ post!.description }}</p>
           <div class="flex flex-wrap gap-1.5 mt-5">
             <span v-for="tag in post!.tags" :key="tag" class="cyber-tag-purple">#{{ tag }}</span>
           </div>

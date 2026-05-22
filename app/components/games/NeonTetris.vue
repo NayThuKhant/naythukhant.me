@@ -7,6 +7,7 @@ const state = ref<'idle' | 'playing' | 'over'>('idle')
 
 const COLS = 10, ROWS = 20, CELL = 26
 const W = COLS * CELL, H = ROWS * CELL
+const τ = Math.PI * 2
 
 const SHAPES: { cells: [number, number][], color: string }[] = [
   { cells: [[0,0],[1,0],[2,0],[3,0]], color: '#00d4ff' }, // I
@@ -20,12 +21,18 @@ const SHAPES: { cells: [number, number][], color: string }[] = [
 
 type Grid = (string | null)[][]
 interface Piece { cells: [number, number][]; color: string; x: number; y: number }
+interface Particle { x: number; y: number; vx: number; vy: number; age: number; maxAge: number; r: number; color: string }
+interface ScorePopup { x: number; y: number; vy: number; age: number; maxAge: number; text: string }
 
 let grid: Grid = []
 let piece: Piece | null = null
 let nextPiece: Piece | null = null
 let raf = 0
 let lastDrop = 0
+let particles: Particle[] = []
+let scorePopups: ScorePopup[] = []
+let shakeTimer = 0
+let titlePulse = 0
 
 function dropInterval() { return Math.max(100, 800 - (level.value - 1) * 70) }
 
@@ -52,16 +59,30 @@ function valid(cells: [number, number][], ox: number, oy: number): boolean {
   })
 }
 
+function spawnParticles(x: number, y: number, color: string) {
+  for (let i = 0; i < 6; i++) {
+    const angle = (τ / 6) * i + Math.random() * 0.4
+    const speed = 1.2 + Math.random() * 2
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, age: 0, maxAge: 18, r: 2 + Math.random() * 2, color })
+  }
+}
+
 function lock() {
   if (!piece) return
+  // Spawn particles for each locked cell
   for (const [cx, cy] of piece.cells) {
     const ny = cy + piece.y
-    if (ny >= 0 && ny < ROWS) grid[ny]![cx + piece.x] = piece.color
+    if (ny >= 0 && ny < ROWS) {
+      grid[ny]![cx + piece.x] = piece.color
+      spawnParticles((cx + piece.x) * CELL + CELL / 2, ny * CELL + CELL / 2, piece.color)
+    }
   }
 
   let cleared = 0
+  const clearedRows: number[] = []
   for (let r = ROWS - 1; r >= 0; ) {
     if (grid[r]!.every(c => c !== null)) {
+      clearedRows.push(r)
       grid.splice(r, 1)
       grid.unshift(Array<string | null>(COLS).fill(null))
       cleared++
@@ -71,9 +92,13 @@ function lock() {
   }
 
   if (cleared > 0) {
-    score.value += ([0, 100, 300, 500, 800][cleared] ?? 800) * level.value
+    const pts = ([0, 100, 300, 500, 800][cleared] ?? 800) * level.value
+    score.value += pts
     lines.value += cleared
     level.value = Math.floor(lines.value / 10) + 1
+    // Score popup in the middle
+    scorePopups.push({ x: W / 2, y: H / 2, vy: -0.9, age: 0, maxAge: 45, text: `+${pts}` })
+    shakeTimer = 5
   }
 
   piece = nextPiece ?? randomPiece()
@@ -107,6 +132,17 @@ function frame(ts: number) {
   raf = requestAnimationFrame(frame)
   const ctx = canvasEl.value?.getContext('2d')
   if (!ctx) return
+  titlePulse = ts
+
+  let shakeX = 0, shakeY = 0
+  if (shakeTimer > 0) {
+    shakeX = (Math.random() - 0.5) * 6
+    shakeY = (Math.random() - 0.5) * 6
+    shakeTimer--
+  }
+
+  ctx.save()
+  if (shakeTimer > 0) ctx.translate(shakeX, shakeY)
 
   ctx.fillStyle = '#030712'; ctx.fillRect(0, 0, W, H)
 
@@ -123,6 +159,14 @@ function frame(ts: number) {
     }
   }
 
+  // Update particles
+  if (state.value === 'playing') {
+    for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.age++ }
+    particles = particles.filter(p => p.age < p.maxAge)
+    for (const sp of scorePopups) { sp.y += sp.vy; sp.age++ }
+    scorePopups = scorePopups.filter(sp => sp.age < sp.maxAge)
+  }
+
   for (let r = 0; r < ROWS; r++) for (let c = 0; c < COLS; c++) {
     const color = grid[r]![c]
     if (color) drawCell(ctx, c, r, color)
@@ -136,21 +180,65 @@ function frame(ts: number) {
     for (const [cx, cy] of piece.cells) drawCell(ctx, cx + piece.x, cy + piece.y, piece.color)
   }
 
+  // Draw particles
+  for (const p of particles) {
+    const t = 1 - p.age / p.maxAge
+    ctx.save()
+    ctx.globalAlpha = t
+    ctx.shadowColor = p.color; ctx.shadowBlur = 5
+    ctx.fillStyle = p.color
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * t, 0, τ); ctx.fill()
+    ctx.restore()
+  }
+
+  // Draw score popups
+  ctx.save()
+  ctx.font = "bold 13px 'Courier New', monospace"
+  ctx.textAlign = 'center'
+  for (const sp of scorePopups) {
+    const t = 1 - sp.age / sp.maxAge
+    ctx.globalAlpha = t
+    ctx.fillStyle = '#ffe082'
+    ctx.shadowColor = '#ffe082'; ctx.shadowBlur = 8
+    ctx.fillText(sp.text, sp.x, sp.y)
+  }
+  ctx.restore()
+
   if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'; ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
+    const pulse = 0.5 + 0.5 * Math.sin(titlePulse * 0.003)
+    ctx.shadowColor = '#00d4ff'
+    ctx.shadowBlur = 8 + pulse * 18
     ctx.fillStyle = '#00d4ff'
     ctx.font = "bold 22px 'Space Grotesk', sans-serif"
     ctx.fillText('NEON TETRIS', W / 2, H / 2 - 24)
+    ctx.shadowBlur = 0
+    // Animated tetromino
+    const colors = ['#00d4ff','#ffd700','#a855f7','#00ff88']
+    for (let i = 0; i < 4; i++) {
+      const tx = W / 2 - 36 + i * 24
+      const ty = H / 2 + 6 + Math.sin(titlePulse * 0.002 + i * 0.9) * 5
+      ctx.save()
+      ctx.shadowColor = colors[i]!; ctx.shadowBlur = 6 + pulse * 8
+      ctx.fillStyle = colors[i]!
+      ctx.fillRect(tx - 9, ty - 9, 18, 18)
+      ctx.fillStyle = 'rgba(255,255,255,0.2)'
+      ctx.fillRect(tx - 9, ty - 9, 18, 3); ctx.fillRect(tx - 9, ty - 9, 3, 18)
+      ctx.restore()
+    }
     ctx.fillStyle = 'rgba(200,220,255,0.5)'
     ctx.font = "11px 'Courier New', monospace"
-    ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 12)
+    ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 34)
   }
+
+  ctx.restore()
 }
 
 function start() {
   grid = newGrid(); score.value = 0; lines.value = 0; level.value = 1; lastDrop = 0
   piece = randomPiece(); nextPiece = randomPiece(); state.value = 'playing'
+  particles = []; scorePopups = []; shakeTimer = 0
 }
 
 function restart() {

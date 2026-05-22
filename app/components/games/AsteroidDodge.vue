@@ -10,6 +10,8 @@ const SHIP_W = 22, SHIP_H = 30
 const τ = Math.PI * 2
 
 interface Asteroid { x: number; y: number; r: number; vx: number; vy: number; rot: number; rotV: number; sides: number }
+interface Particle { x: number; y: number; vx: number; vy: number; age: number; maxAge: number; r: number; color: string }
+interface ScorePopup { x: number; y: number; vy: number; age: number; maxAge: number; text: string }
 
 let raf = 0
 let shipX = W / 2
@@ -19,6 +21,10 @@ let invincible = 0
 let elapsed = 0
 let lastTs = 0
 const keys = { left: false, right: false }
+let particles: Particle[] = []
+let scorePopups: ScorePopup[] = []
+let shakeTimer = 0
+let titlePulse = 0
 
 function spawnInterval() { return Math.max(600, 1800 - elapsed * 0.3) }
 function asteroidSpeed()  { return 1.5 + elapsed * 0.0008 }
@@ -36,10 +42,19 @@ function spawnAsteroid() {
   })
 }
 
+function spawnParticles(x: number, y: number, color: string, count = 7) {
+  for (let i = 0; i < count; i++) {
+    const angle = (τ / count) * i + Math.random() * 0.6
+    const speed = 1.5 + Math.random() * 3
+    particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, age: 0, maxAge: 22, r: 2 + Math.random() * 2, color })
+  }
+}
+
 function reset() {
   shipX = W / 2; asteroids = []
   spawnTimer = 0; elapsed = 0; invincible = 0
   score.value = 0; lives.value = 3
+  particles = []; scorePopups = []; shakeTimer = 0
 }
 
 function startGame() { reset(); state.value = 'playing' }
@@ -73,6 +88,17 @@ function frame(ts: number) {
   if (!ctx) return
   const dt = Math.min(ts - lastTs, 50)
   lastTs = ts
+  titlePulse = ts
+
+  let shakeX = 0, shakeY = 0
+  if (shakeTimer > 0) {
+    shakeX = (Math.random() - 0.5) * 8
+    shakeY = (Math.random() - 0.5) * 8
+    shakeTimer--
+  }
+
+  ctx.save()
+  if (shakeTimer > 0) ctx.translate(shakeX, shakeY)
 
   ctx.fillStyle = '#030712'
   ctx.fillRect(0, 0, W, H)
@@ -99,6 +125,12 @@ function frame(ts: number) {
 
     // Move asteroids
     for (const a of asteroids) { a.x += a.vx; a.y += a.vy; a.rot += a.rotV }
+
+    // Asteroids that pass off screen — small score reward
+    const passed = asteroids.filter(a => a.y > H + 60)
+    for (const a of passed) {
+      scorePopups.push({ x: a.x, y: H - 20, vy: -0.8, age: 0, maxAge: 35, text: '+1' })
+    }
     asteroids = asteroids.filter(a => a.y < H + 60)
 
     // Collision (ship is a triangle, approximate as circle r=16)
@@ -108,11 +140,22 @@ function frame(ts: number) {
         if (dist < a.r + 14) {
           lives.value--
           invincible = 2000
-          if (lives.value <= 0) { state.value = 'over'; return }
+          shakeTimer = 8
+          // Particle burst on hit
+          spawnParticles(shipX, SHIP_Y, '#00d4ff', 8)
+          if (lives.value <= 0) { ctx.restore(); state.value = 'over'; return }
           break
         }
       }
     }
+
+    // Update particles
+    for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.age++ }
+    particles = particles.filter(p => p.age < p.maxAge)
+
+    // Update score popups
+    for (const sp of scorePopups) { sp.y += sp.vy; sp.age++ }
+    scorePopups = scorePopups.filter(sp => sp.age < sp.maxAge)
   }
 
   // Draw asteroids
@@ -156,23 +199,72 @@ function frame(ts: number) {
   }
   ctx.restore()
 
+  // Draw particles
+  for (const p of particles) {
+    const t = 1 - p.age / p.maxAge
+    ctx.save()
+    ctx.globalAlpha = t
+    ctx.shadowColor = p.color; ctx.shadowBlur = 5
+    ctx.fillStyle = p.color
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.r * t, 0, τ); ctx.fill()
+    ctx.restore()
+  }
+
+  // Draw score popups
+  ctx.save()
+  ctx.font = "bold 11px 'Courier New', monospace"
+  ctx.textAlign = 'center'
+  for (const sp of scorePopups) {
+    const t = 1 - sp.age / sp.maxAge
+    ctx.globalAlpha = t
+    ctx.fillStyle = '#00ff88'
+    ctx.shadowColor = '#00ff88'; ctx.shadowBlur = 6
+    ctx.fillText(sp.text, sp.x, sp.y)
+  }
+  ctx.restore()
+
   // HUD
   ctx.fillStyle = 'rgba(200,220,255,0.65)'
   ctx.font = "13px 'Courier New', monospace"
   ctx.textAlign = 'left'; ctx.fillText(`${score.value}s`, 14, 26)
   ctx.textAlign = 'right'; ctx.fillText('♥ '.repeat(lives.value).trim(), W - 14, 26)
 
-  // Overlays (idle title screen only — over handled by HTML popup)
+  // Idle title overlay with pulsing glow
   if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.80)'; ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
+    const pulse = 0.5 + 0.5 * Math.sin(titlePulse * 0.003)
+    ctx.shadowColor = '#00d4ff'
+    ctx.shadowBlur = 8 + pulse * 18
     ctx.fillStyle = '#00d4ff'
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"
     ctx.fillText('ASTEROID DODGE', W / 2, H / 2 - 36)
+    ctx.shadowBlur = 0
+    // Animated asteroid shapes
+    for (let i = 0; i < 3; i++) {
+      const ax = W / 2 - 40 + i * 40
+      const ay = H / 2 + 4 + Math.sin(titlePulse * 0.0015 + i * 1.2) * 5
+      const ar = 8 + i * 3
+      ctx.save()
+      ctx.translate(ax, ay)
+      ctx.rotate(titlePulse * 0.0005 * (i % 2 === 0 ? 1 : -1))
+      ctx.strokeStyle = `rgba(175,158,138,${0.5 + pulse * 0.4})`; ctx.lineWidth = 1.5
+      ctx.fillStyle = 'rgba(80,70,60,0.6)'
+      ctx.beginPath()
+      for (let j = 0; j < 7; j++) {
+        const angle = (τ / 7) * j
+        const jit = ar * (0.78 + 0.22 * Math.sin(j * 2.3))
+        j === 0 ? ctx.moveTo(Math.cos(angle)*jit, Math.sin(angle)*jit) : ctx.lineTo(Math.cos(angle)*jit, Math.sin(angle)*jit)
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke()
+      ctx.restore()
+    }
     ctx.fillStyle = 'rgba(200,220,255,0.45)'
     ctx.font = "12px 'Courier New', monospace"
     ctx.fillText('Press ← → or SPACE to start', W / 2, H / 2 + 44)
   }
+
+  ctx.restore()
 }
 
 function onKey(e: KeyboardEvent) {

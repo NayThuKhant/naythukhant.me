@@ -13,13 +13,22 @@ const GRID_X = [80, 200, 320]
 const GRID_Y = [80, 170, 260]
 
 interface Alien {
-  col: number
-  row: number
-  visible: boolean
-  flashFrames: number
-  life: number      // ms remaining for this popup
-  maxLife: number
-  rising: number    // 0..1 animation progress
+  col: number; row: number
+  visible: boolean; flashFrames: number
+  life: number; maxLife: number; rising: number
+}
+
+// --- Particle / popup interfaces ---
+interface Particle {
+  x: number; y: number
+  vx: number; vy: number
+  age: number; maxAge: number
+  color: string; size: number
+}
+interface ScorePopup {
+  x: number; y: number
+  age: number; maxAge: number
+  text: string
 }
 
 let raf = 0
@@ -29,8 +38,70 @@ let spawnInterval = 900
 let lastTs = 0
 let countdownTimer = 0
 let activeHoles = new Set<number>()
+let particles: Particle[] = []
+let popups: ScorePopup[] = []
 
 function holeKey(col: number, row: number) { return row * COLS + col }
+
+function spawnParticles(x: number, y: number, color: string, n = 7) {
+  for (let i = 0; i < n; i++) {
+    const angle = Math.random() * τ
+    const spd = 2 + Math.random() * 3
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * spd,
+      vy: Math.sin(angle) * spd - 1,
+      age: 0, maxAge: 18 + Math.floor(Math.random() * 8),
+      color, size: 2 + Math.random() * 2.5,
+    })
+  }
+}
+
+function spawnPopup(x: number, y: number, text: string) {
+  popups.push({ x, y, age: 0, maxAge: 40, text })
+}
+
+function updateParticles() {
+  for (const p of particles) {
+    p.x += p.vx; p.y += p.vy
+    p.vy += 0.1
+    p.age++
+  }
+  particles = particles.filter(p => p.age < p.maxAge)
+}
+
+function drawParticles(ctx: CanvasRenderingContext2D) {
+  for (const p of particles) {
+    const alpha = 1 - p.age / p.maxAge
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.fillStyle = p.color
+    ctx.shadowColor = p.color
+    ctx.shadowBlur = 6
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.size, 0, τ)
+    ctx.fill()
+    ctx.restore()
+  }
+}
+
+function drawPopups(ctx: CanvasRenderingContext2D) {
+  for (const pop of popups) {
+    const alpha = 1 - pop.age / pop.maxAge
+    const dy = -30 * (pop.age / pop.maxAge)
+    ctx.save()
+    ctx.globalAlpha = alpha
+    ctx.shadowColor = '#ffd700'
+    ctx.shadowBlur = 8
+    ctx.fillStyle = '#ffd700'
+    ctx.font = "bold 14px 'Courier New', monospace"
+    ctx.textAlign = 'center'
+    ctx.fillText(pop.text, pop.x, pop.y + dy)
+    ctx.restore()
+    pop.age++
+  }
+  popups = popups.filter(p => p.age < p.maxAge)
+}
 
 function spawnAlien() {
   const available: number[] = []
@@ -56,6 +127,8 @@ function reset() {
   spawnInterval = 900
   countdownTimer = 0
   lastTs = 0
+  particles = []
+  popups = []
 }
 
 function drawHole(ctx: CanvasRenderingContext2D, cx: number, cy: number) {
@@ -80,18 +153,12 @@ function drawAlienFace(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   const color = flash ? '#ffffff' : '#00ff88'
   ctx.shadowColor = flash ? '#ffffff' : '#00ff88'
   ctx.shadowBlur = flash ? 30 : 18
-
-  // Body
   ctx.fillStyle = color
   ctx.beginPath()
   ctx.arc(cx, cy, r, 0, τ)
   ctx.fill()
-
-  // Inner face detail
   ctx.shadowBlur = 0
   ctx.fillStyle = flash ? 'rgba(0,255,136,0.3)' : '#030712'
-
-  // Eyes
   const eyeR = r * 0.18
   ctx.beginPath()
   ctx.arc(cx - r * 0.3, cy - r * 0.1, eyeR, 0, τ)
@@ -99,8 +166,6 @@ function drawAlienFace(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   ctx.beginPath()
   ctx.arc(cx + r * 0.3, cy - r * 0.1, eyeR, 0, τ)
   ctx.fill()
-
-  // Eye glow pupils
   ctx.fillStyle = flash ? '#030712' : '#00ff88'
   ctx.shadowColor = '#00ff88'
   ctx.shadowBlur = 6
@@ -110,16 +175,12 @@ function drawAlienFace(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   ctx.beginPath()
   ctx.arc(cx + r * 0.3, cy - r * 0.1, eyeR * 0.5, 0, τ)
   ctx.fill()
-
-  // Mouth
   ctx.shadowBlur = 0
-  ctx.strokeStyle = flash ? '#030712' : '#030712'
+  ctx.strokeStyle = '#030712'
   ctx.lineWidth = 2
   ctx.beginPath()
   ctx.arc(cx, cy + r * 0.2, r * 0.3, 0.15 * Math.PI, 0.85 * Math.PI)
   ctx.stroke()
-
-  // Antenna
   ctx.strokeStyle = color
   ctx.shadowColor = color
   ctx.shadowBlur = 8
@@ -132,7 +193,6 @@ function drawAlienFace(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   ctx.moveTo(cx, cy - r)
   ctx.lineTo(cx + r * 0.2, cy - r * 1.5)
   ctx.stroke()
-  // Antenna tips
   ctx.fillStyle = color
   ctx.shadowBlur = 10
   ctx.beginPath()
@@ -141,7 +201,6 @@ function drawAlienFace(ctx: CanvasRenderingContext2D, cx: number, cy: number, r:
   ctx.beginPath()
   ctx.arc(cx + r * 0.2, cy - r * 1.5, 3, 0, τ)
   ctx.fill()
-
   ctx.restore()
 }
 
@@ -152,11 +211,9 @@ function frame(ts: number) {
   const dt = lastTs === 0 ? 16 : Math.min(ts - lastTs, 50)
   lastTs = ts
 
-  // Background
   ctx.fillStyle = '#030712'
   ctx.fillRect(0, 0, W, H)
 
-  // Stars
   ctx.fillStyle = 'rgba(200,220,255,0.12)'
   for (let i = 0; i < 40; i++) {
     const sx = (i * 97 + ts * 0.003) % W
@@ -164,7 +221,6 @@ function frame(ts: number) {
     ctx.fillRect(sx, sy, 1.5, 1.5)
   }
 
-  // Update game logic
   if (state.value === 'playing') {
     countdownTimer += dt
     if (countdownTimer >= 1000) {
@@ -183,7 +239,6 @@ function frame(ts: number) {
       spawnAlien()
     }
 
-    // Update aliens
     for (let i = aliens.length - 1; i >= 0; i--) {
       const a = aliens[i]!
       if (a.flashFrames > 0) {
@@ -207,52 +262,53 @@ function frame(ts: number) {
     }
   }
 
-  // Draw holes
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       drawHole(ctx, GRID_X[c]!, GRID_Y[r]!)
     }
   }
 
-  // Draw aliens (clipped to hole)
   for (const a of aliens) {
     const cx = GRID_X[a.col]!
     const cy = GRID_Y[a.row]!
     const rise = a.flashFrames > 0 ? 1 : a.rising
     if (rise <= 0) continue
-
     const alienR = 22
     const offsetY = HOLE_R * 0.9 * (1 - rise)
     const acx = cx
     const acy = cy - alienR * 0.4 - offsetY * 0.5
-
-    // Clip to hole area
     ctx.save()
     ctx.beginPath()
     ctx.ellipse(cx, cy, HOLE_R + 4, HOLE_R * 0.5 + alienR * 1.8, 0, 0, τ)
     ctx.clip()
-
     drawAlienFace(ctx, acx, acy - (alienR * rise * 0.6), alienR, a.flashFrames > 0)
     ctx.restore()
   }
 
-  // Overlay for idle state only
+  // Particles + popups (drawn after aliens, before overlay)
+  updateParticles()
+  drawParticles(ctx)
+  drawPopups(ctx)
+
   if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    ctx.fillStyle = '#00ff88'
+    const pulse = 0.6 + 0.4 * Math.sin(ts * 0.003)
+    ctx.fillStyle = `rgba(0,255,136,${0.7 + 0.3 * pulse})`
     ctx.shadowColor = '#00ff88'
-    ctx.shadowBlur = 20
+    ctx.shadowBlur = 20 + 14 * pulse
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"
     ctx.fillText('NEON WHACK', W / 2, H / 2 - 28)
     ctx.shadowBlur = 0
     ctx.fillStyle = 'rgba(200,220,255,0.55)'
     ctx.font = "13px 'Courier New', monospace"
     ctx.fillText('Click the aliens before they hide', W / 2, H / 2 + 10)
-    ctx.fillStyle = 'rgba(200,220,255,0.35)'
-    ctx.font = "12px 'Courier New', monospace"
-    ctx.fillText('Click anywhere to start', W / 2, H / 2 + 34)
+    if (Math.floor(ts / 600) % 2 === 0) {
+      ctx.fillStyle = 'rgba(200,220,255,0.35)'
+      ctx.font = "12px 'Courier New', monospace"
+      ctx.fillText('Click anywhere to start', W / 2, H / 2 + 34)
+    }
   }
 }
 
@@ -278,6 +334,9 @@ function hitTest(clientX: number, clientY: number) {
       a.flashFrames = 8
       a.life = 0
       score.value++
+      // Particle burst + popup on whack
+      spawnParticles(cx, acy, '#00ff88', 8)
+      spawnPopup(cx, acy - alienR - 10, '+1')
       return
     }
   }

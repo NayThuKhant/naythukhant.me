@@ -2,313 +2,313 @@
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const score    = ref(0)
 const lives    = ref(3)
+const level    = ref(1)
+const typed    = ref(0)
 const state    = ref<'idle' | 'playing' | 'over'>('idle')
 
-const W = 480, H = 320
+const W = 400, H = 460
 const τ = Math.PI * 2
+const MAX_LIVES     = 3
+const MAX_ON_SCREEN = 7
+const LEVEL_UP_AT   = 8
+const DANGER_Y      = H - 36
 
-const WORDS = [
-  'NEBULA', 'QUASAR', 'PULSAR', 'COMET', 'AURORA', 'COSMOS', 'GALAXY',
-  'ORBIT', 'PHOTON', 'ZENITH', 'LUNAR', 'SOLAR', 'VORTEX', 'PLASMA',
-  'NOVA', 'TITAN', 'ETHER', 'VOID', 'STELLAR', 'ECLIPSE',
-  'METEOR', 'ASTEROID', 'NEUTRON', 'PROTON', 'HYPNOS', 'ATLAS',
-  'ANDROMEDA', 'CORONA', 'HELIOS', 'LYRA', 'CYGNUS', 'SIRIUS',
-  'VEGA', 'RIGEL', 'ALTAIR', 'DENEB', 'POLARIS', 'ANTARES', 'CASTOR', 'POLLUX',
+const POOL: string[][] = [
+  ['mars', 'moon', 'nova', 'star', 'void', 'warp', 'beam', 'dark', 'dust', 'glow',
+   'halo', 'neon', 'ring', 'flux', 'core', 'fire', 'spin', 'grid', 'byte', 'orb',
+   'ray', 'sun', 'ion', 'gas', 'arc'],
+  ['nebula', 'photon', 'plasma', 'quasar', 'saturn', 'signal', 'vector', 'pulsar',
+   'meteor', 'galaxy', 'cosmos', 'aurora', 'zenith', 'vortex', 'helium', 'debris',
+   'impact', 'launch', 'module', 'oxygen'],
+  ['asteroid', 'supernova', 'wormhole', 'stardust', 'blackhole', 'antimatter',
+   'cosmology', 'magnitude', 'telescope', 'interstellar'],
 ]
 
-type Asteroid = {
-  id: number
-  word: string
-  x: number
-  y: number
-  speed: number
-  radius: number
-  typed: number
-  exploding: boolean
-  explodeTimer: number
-  hue: number
+interface FallingWord {
+  id: number; text: string; x: number; y: number; speed: number
+  progress: number; active: boolean
+  dying: boolean; dyAge: number; dyMax: number; missed: boolean
+}
+interface Particle {
+  x: number; y: number; vx: number; vy: number
+  age: number; maxAge: number; color: string; r: number
+}
+interface BgStar { x: number; y: number; sz: number; op: number }
+
+let uid        = 1
+let words:     FallingWord[] = []
+let particles: Particle[]    = []
+let bgStars:   BgStar[]      = []
+let activeId:  number | null = null
+let spawnTimer = 0
+let spawnEvery = 180
+let destroyed  = 0
+let ctx2d:     CanvasRenderingContext2D | null = null
+let raf        = 0
+
+function pickWord(): string {
+  const tier = level.value <= 2 ? 0 : level.value <= 4 ? 1 : 2
+  const pool = level.value === 3 ? [...POOL[0]!, ...POOL[1]!] : POOL[tier]!
+  return pool[Math.floor(Math.random() * pool.length)]!
 }
 
-let asteroids: Asteroid[] = []
-let currentTyped = ''
-let nextId = 0
-let raf = 0
-let lastSpawn = 0
-let spawnInterval = 3000
-let frameTs = 0
+function fallSpeed(): number {
+  return 0.36 + (level.value - 1) * 0.1 + Math.random() * 0.14
+}
 
-function spawnAsteroid(ts: number) {
-  const word = WORDS[Math.floor(Math.random() * WORDS.length)]!
-  const radius = 18 + Math.floor(Math.random() * 10)
-  const x = radius + Math.random() * (W - radius * 2)
-  const difficulty = Math.min(score.value * 0.03, 1.2)
-  const speed = 0.3 + Math.random() * 0.4 + difficulty * 0.5
-  asteroids.push({
-    id: nextId++,
-    word,
-    x,
-    y: -radius,
-    speed,
-    radius,
-    typed: 0,
-    exploding: false,
-    explodeTimer: 0,
-    hue: Math.random() < 0.5 ? 0 : 1, // 0=blue, 1=purple
+function spawnWord() {
+  const text = pickWord()
+  const halfW = (text.length * 9.6) / 2 + 8
+  const x = halfW + 12 + Math.random() * (W - halfW * 2 - 24)
+  words.push({
+    id: uid++, text, x, y: -10,
+    speed: fallSpeed(),
+    progress: 0, active: false,
+    dying: false, dyAge: 0, dyMax: 18, missed: false,
   })
-  lastSpawn = ts
-  spawnInterval = Math.max(1200, 3000 - score.value * 60)
 }
 
-function reset() {
-  asteroids = []
-  currentTyped = ''
-  nextId = 0
-  score.value = 0
-  lives.value = 3
-  lastSpawn = frameTs
-  spawnInterval = 3000
-}
-
-function activeAsteroid(): Asteroid | null {
-  // Target the lowest non-exploding asteroid
-  let best: Asteroid | null = null
-  for (const a of asteroids) {
-    if (a.exploding) continue
-    if (!best || a.y > best.y) best = a
+function burst(x: number, y: number, color: string, n = 12) {
+  for (let i = 0; i < n; i++) {
+    const a = (i / n) * τ + (Math.random() - 0.5) * 0.7
+    const spd = 1.6 + Math.random() * 3.8
+    particles.push({ x, y,
+      vx: Math.cos(a) * spd, vy: Math.sin(a) * spd - 0.5,
+      age: 0, maxAge: 22 + Math.floor(Math.random() * 14),
+      color, r: 1.5 + Math.random() * 2.5 })
   }
-  return best
 }
 
-function drawAsteroid(ctx: CanvasRenderingContext2D, a: Asteroid) {
-  if (a.exploding) {
-    const t = a.explodeTimer / 20
-    const r = a.radius + t * 30
-    const alpha = 1 - t
-    ctx.save()
-    ctx.globalAlpha = alpha
-    ctx.shadowColor = '#f472b6'
-    ctx.shadowBlur = 30
-    ctx.strokeStyle = '#f472b6'
-    ctx.lineWidth = 2
-    ctx.beginPath()
-    ctx.arc(a.x, a.y, r, 0, τ)
-    ctx.stroke()
-    // Inner flash
-    ctx.fillStyle = `rgba(244,114,182,${alpha * 0.4})`
-    ctx.beginPath()
-    ctx.arc(a.x, a.y, r * 0.5, 0, τ)
-    ctx.fill()
-    ctx.restore()
+function destroyWord(w: FallingWord) {
+  w.dying = true; w.active = false
+  activeId = null
+  destroyed++
+  typed.value++
+  score.value += 10 + w.text.length * 4 + (level.value - 1) * 6
+  burst(w.x, w.y, '#00ff88', 14)
+  if (destroyed % LEVEL_UP_AT === 0) {
+    level.value++
+    spawnEvery = Math.max(65, spawnEvery - 18)
+  }
+}
+
+function initStars() {
+  bgStars = Array.from({ length: 55 }, () => ({
+    x: Math.random() * W, y: Math.random() * H,
+    sz: Math.random() * 1.6 + 0.4, op: Math.random() * 0.35 + 0.08,
+  }))
+}
+
+function startGame() {
+  words = []; particles = []
+  activeId = null; spawnTimer = 70
+  spawnEvery = 180; destroyed = 0
+  score.value = 0; lives.value = MAX_LIVES
+  level.value = 1; typed.value = 0
+  state.value = 'playing'
+  initStars()
+  spawnWord()
+}
+
+function onKey(e: KeyboardEvent) {
+  if (state.value !== 'playing') {
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); startGame() }
     return
   }
 
-  const active = activeAsteroid()
-  const isActive = active?.id === a.id
-  const color = a.hue === 0 ? '#00d4ff' : '#a855f7'
-  const glowColor = a.hue === 0 ? '#00d4ff' : '#a855f7'
+  const ch = e.key.toLowerCase()
+  if (ch.length !== 1 || !/[a-z]/.test(ch)) return
+  e.preventDefault()
 
-  ctx.save()
-  ctx.shadowColor = glowColor
-  ctx.shadowBlur = isActive ? 20 : 8
-
-  // Irregular asteroid shape
-  ctx.fillStyle = isActive ? color.replace('ff', '44') : 'rgba(20,20,35,0.85)'
-  ctx.strokeStyle = color
-  ctx.lineWidth = isActive ? 2 : 1.5
-  ctx.beginPath()
-  const points = 8
-  for (let i = 0; i < points; i++) {
-    const angle = (i / points) * τ
-    const jitter = 0.7 + ((a.id * 37 + i * 13) % 30) / 100
-    const rx = a.x + Math.cos(angle) * a.radius * jitter
-    const ry = a.y + Math.sin(angle) * a.radius * jitter
-    i === 0 ? ctx.moveTo(rx, ry) : ctx.lineTo(rx, ry)
+  if (activeId !== null) {
+    const w = words.find(w => w.id === activeId && !w.dying)
+    if (w) {
+      if (w.text[w.progress] === ch) {
+        w.progress++
+        if (w.progress >= w.text.length) destroyWord(w)
+      }
+      return
+    }
+    activeId = null
   }
-  ctx.closePath()
-  ctx.fill()
-  ctx.stroke()
-  ctx.restore()
 
-  // Word label below asteroid
-  const typed = a.word.slice(0, a.typed)
-  const remaining = a.word.slice(a.typed)
-  const fontSize = 11
-  const labelY = a.y + a.radius + 14
+  // Lock onto most-dangerous word starting with ch
+  const cands = words.filter(w => !w.dying && w.text[0] === ch)
+  if (!cands.length) return
+  cands.sort((a, b) => b.y - a.y)
+  const target = cands[0]!
 
-  ctx.save()
-  ctx.font = `bold ${fontSize}px 'Courier New', monospace`
-  ctx.textAlign = 'center'
-  ctx.textBaseline = 'top'
+  const prev = words.find(w => w.id === activeId)
+  if (prev) { prev.active = false; prev.progress = 0 }
 
-  // Typed portion (bright)
-  if (typed.length > 0) {
-    const fullW = ctx.measureText(a.word).width
-    const typedW = ctx.measureText(typed).width
-    const startX = a.x - fullW / 2
-
-    ctx.save()
-    ctx.shadowColor = '#00ff88'
-    ctx.shadowBlur = 8
-    ctx.fillStyle = '#00ff88'
-    ctx.textAlign = 'left'
-    ctx.fillText(typed, startX, labelY)
-    ctx.restore()
-
-    // Remaining portion
-    ctx.save()
-    ctx.fillStyle = isActive ? 'rgba(255,255,255,0.9)' : 'rgba(200,200,220,0.5)'
-    ctx.textAlign = 'left'
-    ctx.fillText(remaining, startX + typedW, labelY)
-    ctx.restore()
-  } else {
-    ctx.fillStyle = isActive ? 'rgba(255,255,255,0.9)' : 'rgba(200,200,220,0.5)'
-    ctx.fillText(a.word, a.x, labelY)
-  }
-  ctx.restore()
+  target.active = true
+  target.progress = 1
+  activeId = target.id
+  if (target.progress >= target.text.length) destroyWord(target)
 }
 
-
-function frame(ts: number) {
+function frame() {
   raf = requestAnimationFrame(frame)
-  frameTs = ts
-  const ctx = canvasEl.value?.getContext('2d')
-  if (!ctx) return
+  if (!ctx2d) {
+    ctx2d = canvasEl.value?.getContext('2d') ?? null
+    if (!ctx2d) return
+  }
+  const ctx = ctx2d
 
   ctx.fillStyle = '#030712'
   ctx.fillRect(0, 0, W, H)
 
-  // Subtle grid
-  ctx.fillStyle = 'rgba(255,255,255,0.015)'
-  for (let x = 0; x < W; x += 40) ctx.fillRect(x, 0, 1, H)
-  for (let y = 0; y < H; y += 40) ctx.fillRect(0, y, W, 1)
+  for (const s of bgStars) {
+    ctx.globalAlpha = s.op
+    ctx.fillStyle   = '#ffffff'
+    ctx.fillRect(s.x, s.y, s.sz, s.sz)
+  }
+  ctx.globalAlpha = 1
 
-  // Ground line
   ctx.save()
-  ctx.shadowColor = '#f472b6'
-  ctx.shadowBlur = 6
-  ctx.strokeStyle = 'rgba(244,114,182,0.3)'
-  ctx.lineWidth = 1
-  ctx.setLineDash([6, 4])
-  ctx.beginPath()
-  ctx.moveTo(0, H - 8)
-  ctx.lineTo(W, H - 8)
-  ctx.stroke()
+  ctx.strokeStyle = 'rgba(239,68,68,0.38)'
+  ctx.lineWidth   = 1
+  ctx.setLineDash([4, 7])
+  ctx.beginPath(); ctx.moveTo(0, DANGER_Y); ctx.lineTo(W, DANGER_Y); ctx.stroke()
+  ctx.setLineDash([])
   ctx.restore()
 
   if (state.value === 'playing') {
-    // Spawn
-    if (ts - lastSpawn > spawnInterval && asteroids.filter(a => !a.exploding).length < 5) {
-      spawnAsteroid(ts)
+    const liveCount = words.filter(w => !w.dying).length
+    if (++spawnTimer >= spawnEvery && liveCount < MAX_ON_SCREEN) {
+      spawnTimer = 0
+      spawnWord()
     }
 
-    // Update
-    for (const a of asteroids) {
-      if (a.exploding) {
-        a.explodeTimer++
-      } else {
-        a.y += a.speed
-        if (a.y - a.radius > H - 8) {
-          // Hit ground
-          lives.value--
-          a.exploding = true
-          a.explodeTimer = 0
-          currentTyped = ''
-          if (lives.value <= 0) {
-            state.value = 'over'
-          }
-        }
+    for (const w of words) {
+      if (w.dying) { w.dyAge++; continue }
+      w.y += w.speed
+      if (w.y >= DANGER_Y + 12) {
+        w.missed = true; w.dying = true; w.dyAge = w.dyMax
+        if (w.active) activeId = null
+        burst(w.x, DANGER_Y, '#ef4444', 8)
+        lives.value--
+        if (lives.value <= 0) state.value = 'over'
       }
     }
+    words = words.filter(w => !(w.dying && w.dyAge >= w.dyMax))
 
-    // Remove finished explosions
-    asteroids = asteroids.filter(a => !a.exploding || a.explodeTimer < 20)
-
-    // Draw
-    for (const a of asteroids) drawAsteroid(ctx, a)
+    for (const p of particles) { p.x += p.vx; p.y += p.vy; p.vy += 0.07; p.age++ }
+    particles = particles.filter(p => p.age < p.maxAge)
   }
 
-  // Overlays
+  // Particles
+  ctx.save()
+  ctx.shadowBlur = 7
+  for (const p of particles) {
+    const a = 1 - p.age / p.maxAge
+    ctx.globalAlpha = a
+    ctx.fillStyle = ctx.shadowColor = p.color
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.r * (0.6 + 0.4 * a), 0, τ)
+    ctx.fill()
+  }
+  ctx.restore()
+
+  // Words
+  ctx.save()
+  ctx.font         = "bold 15px 'JetBrains Mono','Courier New',monospace"
+  ctx.textBaseline = 'middle'
+  ctx.textAlign    = 'left'
+
+  for (const w of words) {
+    const alpha = w.dying ? Math.max(0, 1 - w.dyAge / w.dyMax) : 1
+    if (alpha <= 0) continue
+
+    const danger  = Math.max(0, Math.min(1, (w.y - H * 0.55) / (DANGER_Y - H * 0.55)))
+    const fullW   = ctx.measureText(w.text).width
+    const startX  = w.x - fullW / 2
+
+    if (w.active && !w.dying) {
+      ctx.globalAlpha = alpha * 0.11
+      ctx.fillStyle   = '#00d4ff'
+      ctx.fillRect(startX - 6, w.y - 12, fullW + 12, 24)
+    }
+
+    ctx.globalAlpha = alpha
+
+    if (w.progress > 0) {
+      const typedStr = w.text.slice(0, w.progress)
+      const typedW   = ctx.measureText(typedStr).width
+      ctx.fillStyle   = '#00ff88'
+      ctx.shadowColor = '#00ff88'
+      ctx.shadowBlur  = w.active ? 10 : 4
+      ctx.fillText(typedStr, startX, w.y)
+
+      const rem = w.text.slice(w.progress)
+      if (w.active) {
+        ctx.fillStyle   = '#e2e8f0'
+        ctx.shadowColor = '#00d4ff'
+        ctx.shadowBlur  = 7
+      } else {
+        const rr = Math.round(180 + danger * 75)
+        const gg = Math.round(200 - danger * 140)
+        const bb = Math.round(255 - danger * 200)
+        ctx.fillStyle   = `rgba(${rr},${gg},${bb},0.82)`
+        ctx.shadowColor = danger > 0.45 ? '#ef4444' : 'transparent'
+        ctx.shadowBlur  = danger > 0.45 ? 5 : 0
+      }
+      ctx.fillText(rem, startX + typedW, w.y)
+    } else {
+      if (w.active) {
+        ctx.fillStyle   = '#ffffff'
+        ctx.shadowColor = '#00d4ff'
+        ctx.shadowBlur  = 8
+      } else {
+        const rr = Math.round(180 + danger * 75)
+        const gg = Math.round(200 - danger * 140)
+        const bb = Math.round(255 - danger * 200)
+        ctx.fillStyle   = `rgba(${rr},${gg},${bb},0.78)`
+        ctx.shadowColor = danger > 0.45 ? '#ef4444' : 'transparent'
+        ctx.shadowBlur  = danger > 0.45 ? 5 : 0
+      }
+      ctx.fillText(w.text, startX, w.y)
+    }
+
+    if (w.active && !w.dying) {
+      const curX  = startX + ctx.measureText(w.text.slice(0, w.progress)).width
+      const charW = ctx.measureText(w.text[w.progress] ?? ' ').width
+      ctx.globalAlpha = 0.9
+      ctx.fillStyle   = '#00d4ff'
+      ctx.shadowColor = '#00d4ff'
+      ctx.shadowBlur  = 4
+      ctx.fillRect(curX, w.y + 9, charW, 2)
+    }
+  }
+  ctx.restore()
+
   if (state.value === 'idle') {
-    ctx.fillStyle = 'rgba(3,7,18,0.82)'
+    ctx.fillStyle = 'rgba(3,7,18,0.88)'
     ctx.fillRect(0, 0, W, H)
-    ctx.textAlign = 'center'
-
-    ctx.save()
-    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 24
-    ctx.fillStyle = '#a855f7'
-    ctx.font = "bold 28px 'Space Grotesk', sans-serif"
-    ctx.fillText('TYPE ATTACK', W / 2, H / 2 - 32)
-    ctx.restore()
-    ctx.fillStyle = 'rgba(200,220,255,0.55)'
-    ctx.font = "13px 'Courier New', monospace"
-    ctx.fillText('Press any key to begin', W / 2, H / 2 + 8)
+    const p = 0.5 + 0.5 * Math.sin(Date.now() * 0.0028)
+    ctx.textAlign   = 'center'
+    ctx.font        = "bold 28px 'Space Grotesk',sans-serif"
+    ctx.fillStyle   = `rgba(168,85,247,${0.7 + 0.3 * p})`
+    ctx.shadowColor = '#a855f7'
+    ctx.shadowBlur  = 12 + 14 * p
+    ctx.fillText('TYPE ATTACK', W / 2, H / 2 - 38)
+    ctx.shadowBlur  = 0
+    ctx.font        = "13px 'Courier New',monospace"
+    ctx.fillStyle   = 'rgba(200,220,255,0.52)'
+    ctx.fillText('Words fall from space.', W / 2, H / 2 + 2)
+    ctx.fillText('Type them before they reach the danger line.', W / 2, H / 2 + 20)
+    ctx.font        = "12px 'Courier New',monospace"
+    ctx.fillStyle   = `rgba(200,220,255,${0.28 + 0.22 * p})`
+    ctx.fillText('Press Space or Enter to begin', W / 2, H / 2 + 52)
   }
-}
-
-function onKey(e: KeyboardEvent) {
-  if (state.value === 'idle') {
-    if (e.key === 'Enter' || (e.key.length === 1 && /[A-Za-z]/.test(e.key))) {
-      reset()
-      state.value = 'playing'
-    }
-    return
-  }
-
-  if (state.value === 'over') return
-
-  if (state.value !== 'playing') return
-
-  if (e.key === 'Backspace') {
-    if (currentTyped.length > 0) {
-      currentTyped = currentTyped.slice(0, -1)
-      const active = activeAsteroid()
-      if (active) active.typed = currentTyped.length
-    }
-    return
-  }
-
-  if (e.key.length !== 1 || !/[A-Za-z]/.test(e.key)) return
-
-  const ch = e.key.toUpperCase()
-  const active = activeAsteroid()
-  if (!active) return
-
-  const expected = active.word[active.typed]
-  if (expected && ch === expected) {
-    active.typed++
-    currentTyped = active.word.slice(0, active.typed)
-    if (active.typed === active.word.length) {
-      // Destroy!
-      active.exploding = true
-      active.explodeTimer = 0
-      score.value++
-      currentTyped = ''
-    }
-  } else {
-    // Wrong key — reset typed progress on active
-    active.typed = 0
-    currentTyped = ''
-  }
-}
-
-function restart() {
-  asteroids = []
-  currentTyped = ''
-  nextId = 0
-  score.value = 0
-  lives.value = 3
-  lastSpawn = frameTs
-  spawnInterval = 3000
-  state.value = 'playing'
 }
 
 onMounted(() => {
-  const canvas = canvasEl.value
-  if (canvas) { canvas.width = W; canvas.height = H }
+  if (canvasEl.value) { canvasEl.value.width = W; canvasEl.value.height = H }
+  initStars()
   window.addEventListener('keydown', onKey)
   raf = requestAnimationFrame(frame)
 })
-
 onUnmounted(() => {
   cancelAnimationFrame(raf)
   window.removeEventListener('keydown', onKey)
@@ -317,29 +317,68 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <div class="flex gap-4">
-      <div class="glass-hud px-6 py-2 text-center">
+
+    <div class="glass-hud px-6 py-2 flex gap-6 items-center">
+      <div class="text-center">
         <p class="hud-label text-[10px]">SCORE</p>
         <p class="font-mono font-bold text-white text-lg leading-tight">{{ score }}</p>
       </div>
-      <div class="glass-hud px-6 py-2 text-center">
+      <div class="text-center">
+        <p class="hud-label text-[10px]">WORDS</p>
+        <p class="font-mono font-bold text-white text-lg leading-tight">{{ typed }}</p>
+      </div>
+      <div class="text-center">
+        <p class="hud-label text-[10px]">LEVEL</p>
+        <p class="font-mono font-bold text-white text-lg leading-tight">{{ level }}</p>
+      </div>
+      <div class="text-center">
         <p class="hud-label text-[10px]">LIVES</p>
-        <p class="font-mono font-bold text-neon-pink text-lg leading-tight">
-          <span v-for="i in 3" :key="i" :class="i <= lives ? 'opacity-100' : 'opacity-20'">♥</span>
+        <p class="font-mono font-bold text-neon-pink text-lg leading-tight tracking-widest">
+          {{ '♥'.repeat(lives) }}{{ '♡'.repeat(Math.max(0, MAX_LIVES - lives)) }}
         </p>
       </div>
     </div>
+
     <div class="relative">
-      <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
-      <div v-if="state === 'over'" class="absolute inset-0 rounded-xl flex items-center justify-center" style="background: rgba(3,7,18,0.88)">
-        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
-          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
-          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
-          <p class="hud-label text-[10px]">WORDS DESTROYED</p>
-          <button class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer" @click.stop="restart">↺ RESTART</button>
+      <canvas
+        ref="canvasEl"
+        class="rounded-xl border border-white/10 block"
+        :style="{ width: `${W}px`, height: `${H}px` }"
+      />
+
+      <Transition name="fade">
+        <div
+          v-if="state === 'over'"
+          class="absolute inset-0 rounded-xl flex items-center justify-center"
+          style="background: rgba(3,7,18,0.90)"
+        >
+          <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+            <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">MISSION FAILED</p>
+            <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+            <p class="hud-label text-[10px]">{{ typed }} words · LVL {{ level }}</p>
+            <button
+              class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-purple/30 bg-neon-purple/10 text-neon-purple hover:bg-neon-purple/20 hover:border-neon-purple/50 transition-all cursor-pointer"
+              @click.stop="startGame"
+            >↺ RETRY</button>
+          </div>
         </div>
-      </div>
+      </Transition>
+
+      <Transition name="fade">
+        <div
+          v-if="state === 'idle'"
+          class="absolute inset-0 rounded-xl flex flex-col items-center justify-end pb-8"
+        >
+          <button class="btn-neon-purple" @click.stop="startGame">START</button>
+        </div>
+      </Transition>
     </div>
-    <p class="font-mono text-xs text-slate-600">Type the words to destroy asteroids • don't let them land</p>
+
+    <p class="font-mono text-xs text-slate-600">First letter locks target · type the full word · wrong keys ignored</p>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active, .fade-leave-active { transition: opacity 0.25s ease }
+.fade-enter-from, .fade-leave-to       { opacity: 0 }
+</style>
