@@ -5,7 +5,7 @@ const router = useRouter()
 
 const { data } = usePageLoad('blog-index', {
   page: () => queryCollection('pages').path(route.path).first(),
-  posts: () => queryCollection('blog').order('stem', 'ASC').all(),
+  posts: () => queryCollection('blog').all(),
 })
 
 const activeTag = ref<string | null>((route.query.tag as string) || null)

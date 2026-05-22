@@ -5,7 +5,7 @@ const router = useRouter()
 
 const { data } = usePageLoad('projects-index', {
   page: () => queryCollection('pages').path(route.path).first(),
-  projects: () => queryCollection('projects').order('stem', 'ASC').all(),
+  projects: () => queryCollection('projects').all(),
 })
 
 const activeTag = ref<string | null>((route.query.tag as string) || null)

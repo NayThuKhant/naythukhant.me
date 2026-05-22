@@ -1,10 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
-const nuxtApp = useNuxtApp()
-const key = `project-${route.params.slug}`
-const { data: project } = await useAsyncData(key,
-  () => queryCollection('projects').path(`/projects/${route.params.slug}`).first(),
-  { getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k] },
+const { data: project } = await useAsyncData(
+  () => queryCollection('projects').path(`/projects/${route.params.slug}`).first()
 )
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
 useSeoMeta({
