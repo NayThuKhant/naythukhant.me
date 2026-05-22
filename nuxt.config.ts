@@ -5,14 +5,6 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   css: ['~/assets/css/main.css'],
   content: {
-    // Persist outside .nuxt/ in dev so hot-reloads don't wipe the DB.
-    // In production the bundled content dump is used — no custom filename needed.
-    ...(process.dev && {
-      database: {
-        type: 'sqlite' as const,
-        filename: './.data/content.db',
-      },
-    }),
     build: {
       markdown: {
         highlight: {
