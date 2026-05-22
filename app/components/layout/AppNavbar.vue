@@ -5,7 +5,7 @@ const route = useRoute()
 const scrolled = ref(false)
 const menuOpen = ref(false)
 
-const { data: config } = useConfig()
+const { data: config } = await useConfig()
 
 const links = [
   { label: 'Home',        to: '/',        icon: 'i-lucide-house' },

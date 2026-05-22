@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import useConfig from '~/composables/useConfig'
 
-const { data: config } = useConfig()
+const { data: config } = await useConfig()
 
 useHead({
   titleTemplate: (title) => title ? `${title} · ${config.value?.name ?? ''}` : (config.value?.name ?? ''),
