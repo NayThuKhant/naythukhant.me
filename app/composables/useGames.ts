@@ -21,6 +21,15 @@ import {
   StarCatcher,
   TypeAttack,
   WarpTunnel,
+  SpacePac,
+  QuantumClick,
+  StarMaze,
+  PlanetRacer,
+  CosmicRhythm,
+  AstroCheckers,
+  VoidConnect,
+  CosmicSequence,
+  GalacticJumper,
 } from '#components'
 
 export type GameSlug =
@@ -44,6 +53,26 @@ export type GameSlug =
   | 'laser-bounce'
   | 'warp-tunnel'
   | 'color-surge'
+  | 'space-pac'
+  | 'quantum-click'
+  | 'star-maze'
+  | 'neon-match'
+  | 'planet-racer'
+  | 'cosmic-rhythm'
+  | 'astro-checkers'
+  | 'void-connect'
+  | 'tic-tac-trek'
+  | 'cosmic-sequence'
+  | 'galactic-jumper'
+  | 'blast-chain'
+  | 'zone-defender'
+  | 'nebula-gems'
+  | 'space-scaler'
+  | 'vortex-swipe'
+  | 'cosmo-clash'
+  | 'neon-drift'
+  | 'phase-shift'
+  | 'solar-flare'
 
 export interface GameEntry {
   slug: GameSlug
@@ -256,6 +285,96 @@ export const games: GameEntry[] = [
     color: 'neon-emerald',
     component: ColorSurge,
     controls: ControlLayout.LrFire,
+  },
+  {
+    slug: 'space-pac',
+    id: 'SpacePac',
+    name: 'Space Pac',
+    desc: 'Navigate through a cosmic maze eating star pellets while avoiding ghost-like aliens. Classic maze gameplay in space.',
+    genre: 'MAZE',
+    color: 'neon-purple',
+    component: SpacePac,
+    controls: ControlLayout.Dpad,
+  },
+  {
+    slug: 'quantum-click',
+    id: 'QuantumClick',
+    name: 'Quantum Click',
+    desc: 'Idle clicker set in a quantum reactor. Click to generate energy and unlock cosmic upgrades.',
+    genre: 'IDLE',
+    color: 'neon-blue',
+    component: QuantumClick,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'star-maze',
+    id: 'StarMaze',
+    name: 'Star Maze',
+    desc: 'Navigate through procedural mazes collecting stars. Each level gets more complex and challenging.',
+    genre: 'PUZZLE',
+    color: 'neon-purple',
+    component: StarMaze,
+    controls: ControlLayout.Dpad,
+  },
+  {
+    slug: 'planet-racer',
+    id: 'PlanetRacer',
+    name: 'Planet Racer',
+    desc: 'Race through planetary rings and dodge cosmic debris. Reach the finish line before time runs out.',
+    genre: 'RACING',
+    color: 'neon-emerald',
+    component: PlanetRacer,
+    controls: ControlLayout.Lr,
+  },
+  {
+    slug: 'cosmic-rhythm',
+    id: 'CosmicRhythm',
+    name: 'Cosmic Rhythm',
+    desc: 'Tap the beat as neon circles sync to the cosmic soundtrack. Hit perfect timing for combo multipliers.',
+    genre: 'RHYTHM',
+    color: 'neon-blue',
+    component: CosmicRhythm,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'astro-checkers',
+    id: 'AstroCheckers',
+    name: 'Astro Checkers',
+    desc: 'Play classic checkers against the AI in a neon space arena. King your pieces and dominate the board.',
+    genre: 'STRATEGY',
+    color: 'neon-purple',
+    component: AstroCheckers,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'void-connect',
+    id: 'VoidConnect',
+    name: 'Void Connect',
+    desc: 'Connect Four neon tokens in a row against the CPU. Strategy and quick thinking are key.',
+    genre: 'STRATEGY',
+    color: 'neon-pink',
+    component: VoidConnect,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'cosmic-sequence',
+    id: 'CosmicSequence',
+    name: 'Cosmic Sequence',
+    desc: 'Watch and repeat the neon light sequences. Each round adds a new step — how long can you remember?',
+    genre: 'PUZZLE',
+    color: 'neon-blue',
+    component: CosmicSequence,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'galactic-jumper',
+    id: 'GalacticJumper',
+    name: 'Galactic Jumper',
+    desc: 'Platform jump through floating space chunks. Collect power-ups and avoid black holes on your ascent.',
+    genre: 'PLATFORMER',
+    color: 'neon-purple',
+    component: GalacticJumper,
+    controls: ControlLayout.Lr,
   },
 ]
 

@@ -1,16 +1,16 @@
 <script setup lang="ts">
 
-import useConfig from '~/composables/useConfig'
-
-const { data: config } = await useConfig()
+const { data: page } = await useAsyncData('index', () =>
+  queryCollection('pages').path('/').first()
+)
 
 useSeoMeta({
-  title: config.value?.name,
-  description: config.value?.description,
-  ogTitle: config.value?.name,
-  ogDescription: config.value?.description,
-  twitterTitle: config.value?.name,
-  twitterDescription: config.value?.description,
+  title: page.value?.seo?.title ?? page.value?.title,
+  description: page.value?.seo?.description ?? page.value?.description,
+  ogTitle: page.value?.seo?.title ?? page.value?.title,
+  ogDescription: page.value?.seo?.description ?? page.value?.description,
+  twitterTitle: page.value?.seo?.title ?? page.value?.title,
+  twitterDescription: page.value?.seo?.description ?? page.value?.description,
   twitterCard: 'summary_large_image',
 })
 </script>

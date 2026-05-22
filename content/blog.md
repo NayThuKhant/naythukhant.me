@@ -2,6 +2,6 @@
 title: Blog
 description: Thoughts on software engineering, tools, and the craft.
 seo:
-  title: Blog
-  description: Thoughts on software engineering, tools, and the craft.
+  title: SEO Blog
+  description: SEO Thoughts on software engineering, tools, and the craft.
 ---
