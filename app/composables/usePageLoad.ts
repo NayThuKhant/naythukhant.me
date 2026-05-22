@@ -6,11 +6,16 @@ type Resolve<T extends QMap> = {
 
 export function usePageLoad<T extends QMap>(key: string, queries: T) {
   const keys = Object.keys(queries) as Array<keyof T & string>
+  const nuxtApp = useNuxtApp()
 
   const { data: raw, pending } = useAsyncData(
     key,
     () => Promise.all(keys.map(k => queries[k]!().catch(() => null))),
-    { default: (): null[] => keys.map(() => null) },
+    {
+      default: (): null[] => keys.map(() => null),
+      // Reuse pre-rendered payload on SPA navigation so queryCollection never runs client-side
+      getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k],
+    },
   )
 
   const data = computed<Resolve<T>>(() =>
