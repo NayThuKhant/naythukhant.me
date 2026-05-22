@@ -8,10 +8,10 @@ const { data: page } = await useAsyncData(() =>
 )
 
 useSeoMeta({
-  title: computed(() => page.value?.title ?? ''),
-  description: computed(() => page.value?.description ?? ''),
-  ogTitle: computed(() => page.value?.title ?? ''),
-  ogDescription: computed(() => page.value?.description ?? ''),
+  title: computed(() => page.value?.seo.title ?? ''),
+  description: computed(() => page.value?.seo.description ?? ''),
+  ogTitle: computed(() => page.value?.seo.title ?? ''),
+  ogDescription: computed(() => page.value?.seo.description ?? ''),
   twitterCard: 'summary_large_image',
 })
 </script>
