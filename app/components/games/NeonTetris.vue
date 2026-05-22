@@ -278,18 +278,18 @@ onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('keydo
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <div class="flex gap-4">
-      <div class="glass-hud px-4 py-2 text-center min-w-16">
+    <div class="glass-hud px-6 py-2 flex gap-6 items-center">
+      <div class="text-center">
         <p class="hud-label text-[10px]">SCORE</p>
-        <p class="font-mono font-bold text-white text-base leading-tight">{{ score }}</p>
+        <p class="font-mono font-bold text-white text-lg leading-tight">{{ score }}</p>
       </div>
-      <div class="glass-hud px-4 py-2 text-center min-w-16">
+      <div class="text-center">
         <p class="hud-label text-[10px]">LINES</p>
-        <p class="font-mono font-bold text-white text-base leading-tight">{{ lines }}</p>
+        <p class="font-mono font-bold text-white text-lg leading-tight">{{ lines }}</p>
       </div>
-      <div class="glass-hud px-4 py-2 text-center min-w-16">
+      <div class="text-center">
         <p class="hud-label text-[10px]">LVL</p>
-        <p class="font-mono font-bold text-white text-base leading-tight">{{ level }}</p>
+        <p class="font-mono font-bold text-white text-lg leading-tight">{{ level }}</p>
       </div>
     </div>
     <div class="relative">

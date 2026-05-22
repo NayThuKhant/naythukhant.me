@@ -89,12 +89,12 @@ onUnmounted(() => clearInterval(timer))
 
 <template>
   <div class="flex flex-col items-center gap-4 select-none">
-    <div class="flex gap-4">
-      <div class="glass-hud px-5 py-2 text-center min-w-[72px]">
+    <div class="glass-hud px-6 py-2 flex gap-6 items-center">
+      <div class="text-center">
         <p class="hud-label text-[10px]">FLIPS</p>
         <p class="font-mono font-bold text-white text-lg leading-tight">{{ flips }}</p>
       </div>
-      <div class="glass-hud px-5 py-2 text-center min-w-[72px]">
+      <div class="text-center">
         <p class="hud-label text-[10px]">TIME</p>
         <p class="font-mono font-bold text-white text-lg leading-tight">{{ fmtTime(seconds) }}</p>
       </div>
