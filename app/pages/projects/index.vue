@@ -5,7 +5,7 @@ const router = useRouter()
 
 const { data } = await useAsyncData(() => Promise.all([
   queryCollection('pages').path(route.path).first(),
-  queryCollection('projects').order('stem', 'ASC').all(),
+  queryCollection('projects').all(),
 ]))
 
 const page = computed(() => data.value?.[0])
