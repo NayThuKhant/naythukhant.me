@@ -2,16 +2,10 @@
 const route = useRoute()
 const nuxtApp = useNuxtApp()
 const key = `project-${route.params.slug}`
-const { data: project } = await useAsyncData(key, async () => {
-  const slug = String(route.params.slug)
-  const projects = await queryCollection('projects').all()
-  return projects.find(project => {
-    const fileSlug = project.path.split('/').pop() ?? ''
-    return fileSlug === slug || fileSlug.endsWith(`-${slug}`)
-  }) ?? null
-}, {
-  getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k],
-})
+const { data: project } = await useAsyncData(key,
+  () => queryCollection('projects').path(`/projects/${route.params.slug}`).first(),
+  { getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k] },
+)
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
 useSeoMeta({
   title: project.value?.title,

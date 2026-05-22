@@ -2,16 +2,10 @@
 const route = useRoute()
 const nuxtApp = useNuxtApp()
 const key = `post-${route.params.slug}`
-const { data: post } = await useAsyncData(key, async () => {
-  const slug = String(route.params.slug)
-  const posts = await queryCollection('blog').all()
-  return posts.find(post => {
-    const fileSlug = post.path.split('/').pop() ?? ''
-    return fileSlug === slug || fileSlug.endsWith(`-${slug}`)
-  }) ?? null
-}, {
-  getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k],
-})
+const { data: post } = await useAsyncData(key,
+  () => queryCollection('blog').path(`/blog/${route.params.slug}`).first(),
+  { getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k] },
+)
 if (!post.value) throw createError({ statusCode: 404, message: 'Post not found' })
 
 const formattedDate = computed(() =>
