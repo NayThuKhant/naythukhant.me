@@ -336,12 +336,14 @@ function onKey(e: KeyboardEvent) {
   const down = e.type === 'keydown'
   if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') {
     e.preventDefault()
-    if (state.value !== 'playing' && down) { reset(); state.value = 'playing'; return }
+    if (state.value === 'idle' && down) { reset(); state.value = 'playing'; return }
+    if (state.value !== 'playing') return
     keys.up = down
   }
   if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') {
     e.preventDefault()
-    if (state.value !== 'playing' && down) { reset(); state.value = 'playing'; return }
+    if (state.value === 'idle' && down) { reset(); state.value = 'playing'; return }
+    if (state.value !== 'playing') return
     keys.down = down
   }
 }
@@ -355,7 +357,8 @@ function onTouch(e: TouchEvent) {
   const relY = touch.clientY - rect.top
   const midY = rect.height / 2
   if (e.type === 'touchstart') {
-    if (state.value !== 'playing') { reset(); state.value = 'playing'; return }
+    if (state.value === 'idle') { reset(); state.value = 'playing'; return }
+    if (state.value === 'over') return
     if (relY < midY) { keys.up = true; keys.down = false }
     else { keys.down = true; keys.up = false }
   } else {
@@ -389,17 +392,7 @@ onUnmounted(() => {
     </div>
     <div class="relative">
       <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
-      <div v-if="state === 'over'" class="absolute inset-0 rounded-xl flex items-center justify-center" style="background: rgba(3,7,18,0.88)">
-        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
-          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">TUNNEL COLLAPSED</p>
-          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
-          <p class="hud-label text-[10px]">DISTANCE</p>
-          <button
-            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
-            @click.stop="restart"
-          >↺ RESTART</button>
-        </div>
-      </div>
+      <GameResultOverlay :state="state" :score="score" @restart="restart" />
     </div>
     <p class="font-mono text-xs text-slate-600">↑ ↓ to navigate • survive the wormhole</p>
   </div>

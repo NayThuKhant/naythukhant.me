@@ -130,9 +130,6 @@ function frame(ts: number) {
   }
   ctx.restore()
 
-  ctx.font = "12px 'Courier New', monospace"; ctx.fillStyle = 'rgba(200,220,255,0.35)'
-  ctx.textAlign = 'left';  ctx.fillText(`SCORE: ${score.value}`, 12, 22)
-  ctx.textAlign = 'right'; ctx.fillText(`${'♦'.repeat(lives.value)}${'◇'.repeat(LIFE_MAX - lives.value)}`, W - 12, 22)
 
   if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'; ctx.fillRect(0, 0, W, H)
@@ -216,6 +213,20 @@ onUnmounted(() => cancelAnimationFrame(raf))
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
+
+    <div class="glass-hud px-6 py-2 flex gap-6 items-center">
+      <div class="text-center">
+        <p class="hud-label text-[10px]">SCORE</p>
+        <p class="font-mono font-bold text-white text-lg leading-tight">{{ score }}</p>
+      </div>
+      <div class="text-center">
+        <p class="hud-label text-[10px]">LIVES</p>
+        <p class="font-mono font-bold text-neon-blue text-lg leading-tight tracking-widest">
+          {{ '♦'.repeat(lives) }}{{ '◇'.repeat(Math.max(0, LIFE_MAX - lives)) }}
+        </p>
+      </div>
+    </div>
+
     <div class="relative">
       <canvas
         ref="canvasEl"
@@ -224,21 +235,7 @@ onUnmounted(() => cancelAnimationFrame(raf))
         @touchstart="onTouch"
       />
 
-      <div
-        v-if="state === 'over'"
-        class="absolute inset-0 rounded-xl flex items-center justify-center"
-        style="background: rgba(3,7,18,0.88)"
-      >
-        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
-          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
-          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
-          <p class="hud-label text-[10px]">SCORE</p>
-          <button
-            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
-            @click.stop="restart"
-          >↺ RESTART</button>
-        </div>
-      </div>
+      <GameResultOverlay :state="state" :score="score" @restart="restart" />
     </div>
     <p class="font-mono text-xs text-slate-600">Tap/click meteors before they hit ground</p>
   </div>

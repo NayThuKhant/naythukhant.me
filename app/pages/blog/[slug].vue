@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { DataKey } from '~/types'
 const route = useRoute()
 const { data: post } = await useAsyncData(
+  () => `${DataKey.BlogList}-${route.params.slug}`,
   () => queryCollection('blog').path(`/blog/${route.params.slug}`).first()
 )
 if (!post.value) throw createError({ statusCode: 404, message: 'Post not found' })

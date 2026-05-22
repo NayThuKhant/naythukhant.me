@@ -1,10 +1,15 @@
 export default defineNuxtConfig({
-  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/tailwindcss', '@vueuse/motion/nuxt', '@nuxt/icon', '@nuxt/image'],
+  modules: ['@nuxt/content', 'nuxt-studio', '@nuxtjs/tailwindcss', '@vueuse/motion/nuxt', '@nuxt/icon', '@nuxt/image', '@pinia/nuxt'],
   components: [{ path: '~/components', pathPrefix: false }],
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
   css: ['~/assets/css/main.css'],
   content: {
+    // Persist the SQLite DB outside .nuxt/ so hot-reloads don't wipe tables
+    database: {
+      type: 'sqlite',
+      filename: './.data/content.db',
+    },
     build: {
       markdown: {
         highlight: {

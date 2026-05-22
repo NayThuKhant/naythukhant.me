@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import { DataKey } from '~/types'
 const route = useRoute()
 const { data: project } = await useAsyncData(
+  () => `${DataKey.ProjectList}-${route.params.slug}`,
   () => queryCollection('projects').path(`/projects/${route.params.slug}`).first()
 )
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })

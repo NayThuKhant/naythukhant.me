@@ -3,6 +3,7 @@ import {ControlLayout} from '~/types'
 import {
     AsteroidDodge,
     BreakoutGame,
+    ColorSurge,
     CosmicMinesweeper,
     CosmicPong,
     FlappyRocket,
@@ -262,6 +263,16 @@ export const games: GameEntry[] = [
         color: GameColor.NEON_BLUE,
         component: WarpTunnel,
         controls: ControlLayout.UpDown,
+    },
+    {
+        slug: GameSlug.ColorSurge,
+        id: 'ColorSurge',
+        name: 'Color Surge',
+        desc: 'Shoot colored bubbles into the grid and pop matching clusters before they reach the danger line.',
+        genre: GameGenre.PUZZLE,
+        color: GameColor.NEON_PINK,
+        component: ColorSurge,
+        controls: ControlLayout.LrFire,
     },
 ]
 

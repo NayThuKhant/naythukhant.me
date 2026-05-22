@@ -105,13 +105,8 @@ onUnmounted(() => clearInterval(timer))
       <p class="font-mono text-xs text-slate-600">Match all 8 planet pairs</p>
     </div>
 
-    <div v-if="state === 'won'" class="flex flex-col items-center gap-3">
-      <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
-        <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-neon-emerald">ALL MATCHED!</p>
-        <p class="font-display font-bold text-2xl text-white">{{ flips }} flips</p>
-        <p class="font-mono text-sm text-slate-400">{{ fmtTime(seconds) }}</p>
-        <button class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer" @click.stop="restart">↺ PLAY AGAIN</button>
-      </div>
+    <div v-if="state === 'won'" class="relative">
+      <GameResultOverlay :state="state" :score="flips" :extra="fmtTime(seconds)" @restart="restart" />
     </div>
 
     <div v-else class="grid grid-cols-4 gap-2">

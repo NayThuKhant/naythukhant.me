@@ -1,5 +1,17 @@
 export type { BlogCollectionItem as Post, ProjectsCollectionItem as Project } from '@nuxt/content'
 
+export enum DataKey {
+  Config           = 'config',
+  Skills           = 'skills',
+  FeaturedBlog     = 'featured-blog',
+  FeaturedProjects = 'featured-projects',
+  PageBlog         = 'page-blog',
+  PageProjects     = 'page-projects',
+  PageGames        = 'page-games',
+  BlogList         = 'blog-list',
+  ProjectList      = 'project-list',
+}
+
 export enum ControlLayout {
   LrFire = 'lr-fire',
   Lr     = 'lr',

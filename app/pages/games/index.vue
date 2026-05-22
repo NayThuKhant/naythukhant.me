@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import { DataKey } from '~/types'
 const { scrollFadeUp, staggered } = useAnimations()
 const { games } = useGames()
 const route = useRoute()
 
-const { data: page } = await useAsyncData(() =>
+const { data: page } = await useAsyncData(DataKey.PageGames, () =>
   queryCollection('pages').path(route.path).first()
 )
 

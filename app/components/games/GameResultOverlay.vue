@@ -2,12 +2,15 @@
 const props = defineProps<{
   state: string
   score: number
-  title: string
-  slug: string
   extra?: string
 }>()
 
 const emit = defineEmits<{ restart: [] }>()
+
+// Title and slug are injected from the game page ([slug].vue).
+// Games don't need to know their own name.
+const injectedTitle = inject<string>('gameTitle', '')
+const injectedSlug  = inject<string>('gameSlug', '')
 
 const isWon = computed(() => props.state === 'won')
 const show  = computed(() => props.state === 'over' || props.state === 'won')
@@ -22,16 +25,15 @@ const show  = computed(() => props.state === 'over' || props.state === 'won')
     >
       <div class="flex flex-col items-center gap-3 border border-white/10 bg-white/[0.04] rounded-2xl px-8 py-7 w-64">
 
-        <!-- Result label -->
         <p
           class="font-mono text-[10px] tracking-[0.25em] uppercase"
           :class="isWon ? 'text-neon-emerald' : 'text-red-400'"
         >{{ isWon ? '✦ VICTORY ✦' : '✦ GAME OVER ✦' }}</p>
 
-        <!-- Game title -->
-        <p class="font-display font-bold text-base text-white leading-tight text-center">{{ title }}</p>
+        <p v-if="injectedTitle" class="font-display font-bold text-base text-white leading-tight text-center">
+          {{ injectedTitle }}
+        </p>
 
-        <!-- Score -->
         <div class="text-center">
           <p
             class="font-display font-bold text-5xl leading-none"
@@ -40,16 +42,14 @@ const show  = computed(() => props.state === 'over' || props.state === 'won')
           <p class="hud-label text-[10px] mt-1">SCORE</p>
         </div>
 
-        <!-- Extra info -->
         <p v-if="extra" class="font-mono text-[11px] text-slate-500 text-center">{{ extra }}</p>
 
-        <!-- Game URL -->
         <NuxtLink
-          :to="`/games/${slug}`"
+          v-if="injectedSlug"
+          :to="`/games/${injectedSlug}`"
           class="font-mono text-[10px] text-slate-600 hover:text-neon-blue transition-colors"
-        >/games/{{ slug }}</NuxtLink>
+        >/games/{{ injectedSlug }}</NuxtLink>
 
-        <!-- Restart — only way to restart, prevents accidental skips -->
         <button
           class="mt-1 w-full py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border transition-all cursor-pointer"
           :class="isWon

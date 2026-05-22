@@ -6,6 +6,11 @@ const game = computed(() => getGameBySlug(String(route.params.slug)))
 
 if (!game.value) throw createError({ statusCode: 404, message: 'Game not found' })
 
+// Provide game context so GameResultOverlay can display name + URL without
+// each game component needing to know its own slug.
+provide('gameTitle', game.value.name)
+provide('gameSlug', game.value.slug)
+
 useSeoMeta({
   title: game.value?.name,
   description: game.value?.desc,

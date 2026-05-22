@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import { DataKey } from '~/types'
 const {scrollFadeUp} = useAnimations()
 const [{data: projects}, {data: page}] = await Promise.all([
-  useAsyncData(() =>
+  useAsyncData(DataKey.FeaturedProjects, () =>
       queryCollection('projects').where('featured', '=', true).all(),
   ),
-  useAsyncData(() =>
+  useAsyncData(DataKey.PageProjects, () =>
       queryCollection('pages').path('/projects').first(),
   ),
 ])

@@ -354,7 +354,6 @@ function startGame() {
 
 function onClick(e: MouseEvent) {
   if (state.value === 'idle') { startGame(); return }
-  if (state.value === 'over') { restart(); return }
   if (state.value !== 'playing') return
   hitTest(e.clientX, e.clientY)
 }
@@ -362,7 +361,6 @@ function onClick(e: MouseEvent) {
 function onTouch(e: TouchEvent) {
   e.preventDefault()
   if (state.value === 'idle') { startGame(); return }
-  if (state.value === 'over') { restart(); return }
   if (state.value !== 'playing') return
   for (const t of Array.from(e.changedTouches)) hitTest(t.clientX, t.clientY)
 }
@@ -393,17 +391,7 @@ onUnmounted(() => cancelAnimationFrame(raf))
         @mousedown="onClick"
         @touchstart="onTouch"
       />
-      <div v-if="state === 'over'" class="absolute inset-0 rounded-xl flex items-center justify-center" style="background: rgba(3,7,18,0.88)">
-        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
-          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">TIME'S UP</p>
-          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
-          <p class="hud-label text-[10px]">SCORE</p>
-          <button
-            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
-            @click.stop="restart"
-          >↺ RESTART</button>
-        </div>
-      </div>
+      <GameResultOverlay :state="state" :score="score" @restart="restart" />
     </div>
     <p class="font-mono text-xs text-slate-600">Click the aliens before they hide • rack up points</p>
   </div>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import { DataKey } from '~/types'
 const {scrollFadeUp, staggered} = useAnimations()
 
-const {data: skills} = await useAsyncData(() => queryCollection('skills').all())
+const {data: skills} = await useAsyncData(DataKey.Skills, () => queryCollection('skills').all())
 
 const activeTag = ref<string | null>(null)
 

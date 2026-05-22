@@ -9,25 +9,31 @@ const state    = ref<'idle' | 'playing' | 'over'>('idle')
 const W = 400, H = 460
 const τ = Math.PI * 2
 const MAX_LIVES     = 3
-const MAX_ON_SCREEN = 7
-const LEVEL_UP_AT   = 8
+const MAX_ON_SCREEN = 9      // more simultaneous words
+const LEVEL_UP_AT   = 6      // level up faster
 const DANGER_Y      = H - 36
 
 const POOL: string[][] = [
+  // tier 0 — short (3-5 chars, level 1)
   ['mars', 'moon', 'nova', 'star', 'void', 'warp', 'beam', 'dark', 'dust', 'glow',
    'halo', 'neon', 'ring', 'flux', 'core', 'fire', 'spin', 'grid', 'byte', 'orb',
-   'ray', 'sun', 'ion', 'gas', 'arc'],
+   'ray', 'sun', 'ion', 'gas', 'arc', 'comet', 'orbit', 'probe', 'radar', 'laser'],
+  // tier 1 — medium (6-8 chars, level 2-3)
   ['nebula', 'photon', 'plasma', 'quasar', 'saturn', 'signal', 'vector', 'pulsar',
    'meteor', 'galaxy', 'cosmos', 'aurora', 'zenith', 'vortex', 'helium', 'debris',
-   'impact', 'launch', 'module', 'oxygen'],
+   'impact', 'launch', 'module', 'oxygen', 'rocket', 'fusion', 'planet', 'crater',
+   'corona', 'flares', 'transit', 'eclipse'],
+  // tier 2 — long (8-12 chars, level 4+)
   ['asteroid', 'supernova', 'wormhole', 'stardust', 'blackhole', 'antimatter',
-   'cosmology', 'magnitude', 'telescope', 'interstellar'],
+   'cosmology', 'magnitude', 'telescope', 'interstellar', 'spaceship', 'radiation',
+   'exoplanet', 'singularity', 'trajectory', 'propulsion', 'navigation', 'combustion'],
 ]
 
 interface FallingWord {
   id: number; text: string; x: number; y: number; speed: number
   progress: number; active: boolean
   dying: boolean; dyAge: number; dyMax: number; missed: boolean
+  errFlash: number  // frames of red-flash on wrong key
 }
 interface Particle {
   x: number; y: number; vx: number; vy: number
@@ -47,13 +53,20 @@ let ctx2d:     CanvasRenderingContext2D | null = null
 let raf        = 0
 
 function pickWord(): string {
-  const tier = level.value <= 2 ? 0 : level.value <= 4 ? 1 : 2
-  const pool = level.value === 3 ? [...POOL[0]!, ...POOL[1]!] : POOL[tier]!
+  // Blend tiers so difficulty ramps smoothly
+  const lv = level.value
+  const pool =
+    lv === 1 ? POOL[0]! :
+    lv === 2 ? [...POOL[0]!, ...POOL[1]!] :
+    lv === 3 ? POOL[1]! :
+    lv === 4 ? [...POOL[1]!, ...POOL[2]!] :
+    POOL[2]!
   return pool[Math.floor(Math.random() * pool.length)]!
 }
 
 function fallSpeed(): number {
-  return 0.36 + (level.value - 1) * 0.1 + Math.random() * 0.14
+  // Steeper speed curve: ~1.5× faster by level 5
+  return 0.45 + (level.value - 1) * 0.16 + Math.random() * 0.16
 }
 
 function spawnWord() {
@@ -64,7 +77,7 @@ function spawnWord() {
     id: uid++, text, x, y: -10,
     speed: fallSpeed(),
     progress: 0, active: false,
-    dying: false, dyAge: 0, dyMax: 18, missed: false,
+    dying: false, dyAge: 0, dyMax: 18, missed: false, errFlash: 0,
   })
 }
 
@@ -88,7 +101,7 @@ function destroyWord(w: FallingWord) {
   burst(w.x, w.y, '#00ff88', 14)
   if (destroyed % LEVEL_UP_AT === 0) {
     level.value++
-    spawnEvery = Math.max(65, spawnEvery - 18)
+    spawnEvery = Math.max(55, spawnEvery - 22)  // spawn faster each level
   }
 }
 
@@ -105,6 +118,7 @@ function startGame() {
   spawnEvery = 180; destroyed = 0
   score.value = 0; lives.value = MAX_LIVES
   level.value = 1; typed.value = 0
+  spawnEvery = 160      // tighter initial spawn rate
   state.value = 'playing'
   initStars()
   spawnWord()
@@ -112,7 +126,7 @@ function startGame() {
 
 function onKey(e: KeyboardEvent) {
   if (state.value !== 'playing') {
-    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); startGame() }
+    if (state.value === 'idle' && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); startGame() }
     return
   }
 
@@ -126,6 +140,8 @@ function onKey(e: KeyboardEvent) {
       if (w.text[w.progress] === ch) {
         w.progress++
         if (w.progress >= w.text.length) destroyWord(w)
+      } else {
+        w.errFlash = 6  // flash red for 6 frames
       }
       return
     }
@@ -182,6 +198,7 @@ function frame() {
 
     for (const w of words) {
       if (w.dying) { w.dyAge++; continue }
+      if (w.errFlash > 0) w.errFlash--
       w.y += w.speed
       if (w.y >= DANGER_Y + 12) {
         w.missed = true; w.dying = true; w.dyAge = w.dyMax
@@ -241,7 +258,11 @@ function frame() {
       ctx.fillText(typedStr, startX, w.y)
 
       const rem = w.text.slice(w.progress)
-      if (w.active) {
+      if (w.errFlash > 0) {
+        ctx.fillStyle   = '#f87171'
+        ctx.shadowColor = '#ef4444'
+        ctx.shadowBlur  = 10
+      } else if (w.active) {
         ctx.fillStyle   = '#e2e8f0'
         ctx.shadowColor = '#00d4ff'
         ctx.shadowBlur  = 7
@@ -346,23 +367,7 @@ onUnmounted(() => {
         :style="{ width: `${W}px`, height: `${H}px` }"
       />
 
-      <Transition name="fade">
-        <div
-          v-if="state === 'over'"
-          class="absolute inset-0 rounded-xl flex items-center justify-center"
-          style="background: rgba(3,7,18,0.90)"
-        >
-          <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
-            <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">MISSION FAILED</p>
-            <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
-            <p class="hud-label text-[10px]">{{ typed }} words · LVL {{ level }}</p>
-            <button
-              class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-purple/30 bg-neon-purple/10 text-neon-purple hover:bg-neon-purple/20 hover:border-neon-purple/50 transition-all cursor-pointer"
-              @click.stop="startGame"
-            >↺ RETRY</button>
-          </div>
-        </div>
-      </Transition>
+      <GameResultOverlay :state="state" :score="score" :extra="`${typed} words · LVL ${level}`" @restart="startGame" />
 
       <Transition name="fade">
         <div
