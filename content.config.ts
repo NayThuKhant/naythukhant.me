@@ -2,13 +2,10 @@ import {defineContentConfig, defineCollection, z} from '@nuxt/content'
 import {BootLineType} from './app/types'
 
 
-const seo = z.intersection(
-    z.object({
-        title: z.string(),
-        description: z.string()
-    }),
-    z.record(z.string(), z.any()),
-)
+const seo = z.object({
+    title: z.string(),
+    description: z.string(),
+}).optional()
 
 export default defineContentConfig({
     collections: {
