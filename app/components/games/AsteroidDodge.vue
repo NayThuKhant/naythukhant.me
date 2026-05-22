@@ -44,6 +44,11 @@ function reset() {
 
 function startGame() { reset(); state.value = 'playing' }
 
+function restart() {
+  reset()
+  state.value = 'playing'
+}
+
 function drawAsteroid(ctx: CanvasRenderingContext2D, a: Asteroid, alpha: number) {
   ctx.save()
   ctx.translate(a.x, a.y); ctx.rotate(a.rot)
@@ -157,18 +162,13 @@ function frame(ts: number) {
   ctx.textAlign = 'left'; ctx.fillText(`${score.value}s`, 14, 26)
   ctx.textAlign = 'right'; ctx.fillText('♥ '.repeat(lives.value).trim(), W - 14, 26)
 
-  // Overlays
-  if (state.value !== 'playing') {
+  // Overlays (idle title screen only — over handled by HTML popup)
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.80)'; ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    ctx.fillStyle = state.value === 'idle' ? '#00d4ff' : '#f472b6'
+    ctx.fillStyle = '#00d4ff'
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"
-    ctx.fillText(state.value === 'idle' ? 'ASTEROID DODGE' : 'DESTROYED!', W / 2, H / 2 - 36)
-    if (state.value === 'over') {
-      ctx.fillStyle = 'rgba(200,220,255,0.75)'
-      ctx.font = "15px 'Courier New', monospace"
-      ctx.fillText(`Survived: ${score.value}s`, W / 2, H / 2 + 2)
-    }
+    ctx.fillText('ASTEROID DODGE', W / 2, H / 2 - 36)
     ctx.fillStyle = 'rgba(200,220,255,0.45)'
     ctx.font = "12px 'Courier New', monospace"
     ctx.fillText('Press ← → or SPACE to start', W / 2, H / 2 + 44)
@@ -179,9 +179,9 @@ function onKey(e: KeyboardEvent) {
   const down = e.type === 'keydown'
   if (e.key === 'ArrowLeft'  || e.key === 'a') { e.preventDefault(); keys.left  = down }
   if (e.key === 'ArrowRight' || e.key === 'd') { e.preventDefault(); keys.right = down }
-  if (e.code === 'Space' && down) { e.preventDefault(); if (state.value !== 'playing') startGame() }
-  if (e.key === 'ArrowLeft' && down && state.value !== 'playing') startGame()
-  if (e.key === 'ArrowRight' && down && state.value !== 'playing') startGame()
+  if (e.code === 'Space' && down) { e.preventDefault(); if (state.value === 'idle') startGame() }
+  if (e.key === 'ArrowLeft' && down && state.value === 'idle') startGame()
+  if (e.key === 'ArrowRight' && down && state.value === 'idle') startGame()
 }
 
 onMounted(() => {
@@ -197,7 +197,26 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+    <div class="relative">
+      <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+
+      <!-- Result popup -->
+      <div
+        v-if="state === 'over'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
+          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+          <p class="hud-label text-[10px]">SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">← → or A D to move • survive the asteroid field</p>
   </div>
 </template>

@@ -110,25 +110,15 @@ function frame() {
   ctx.fillText('YOU', W / 4, 58)
   ctx.fillText('CPU', (W * 3) / 4, 58)
 
-  if (state.value !== 'playing') {
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'; ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    if (state.value === 'idle') {
-      ctx.fillStyle = '#00d4ff'
-      ctx.font = "bold 24px 'Space Grotesk', sans-serif"
-      ctx.fillText('COSMIC PONG', W / 2, H / 2 - 24)
-      ctx.fillStyle = 'rgba(200,220,255,0.5)'
-      ctx.font = "11px 'Courier New', monospace"
-      ctx.fillText('↑ ↓ to start & move', W / 2, H / 2 + 12)
-    } else {
-      const won = winner.value === 'player'
-      ctx.fillStyle = won ? '#00d4ff' : '#f472b6'
-      ctx.font = "bold 24px 'Space Grotesk', sans-serif"
-      ctx.fillText(won ? 'YOU WIN!' : 'CPU WINS', W / 2, H / 2 - 28)
-      ctx.fillStyle = 'rgba(200,220,255,0.5)'
-      ctx.font = "11px 'Courier New', monospace"
-      ctx.fillText('↑ ↓ to play again', W / 2, H / 2 + 12)
-    }
+    ctx.fillStyle = '#00d4ff'
+    ctx.font = "bold 24px 'Space Grotesk', sans-serif"
+    ctx.fillText('COSMIC PONG', W / 2, H / 2 - 24)
+    ctx.fillStyle = 'rgba(200,220,255,0.5)'
+    ctx.font = "11px 'Courier New', monospace"
+    ctx.fillText('↑ ↓ to start & move', W / 2, H / 2 + 12)
   }
 }
 
@@ -138,11 +128,15 @@ function startGame() {
   launch(); state.value = 'playing'
 }
 
+function restart() {
+  startGame()
+}
+
 function onKey(e: KeyboardEvent) {
   if (!['ArrowUp', 'ArrowDown'].includes(e.key)) return
   e.preventDefault()
   keys.add(e.key)
-  if (state.value !== 'playing') startGame()
+  if (state.value === 'idle') startGame()
 }
 function onKeyUp(e: KeyboardEvent) { keys.delete(e.key) }
 
@@ -161,7 +155,28 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+    <div class="relative">
+      <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+
+      <div
+        v-if="state === 'over'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p
+            class="font-mono text-[10px] tracking-[0.2em] uppercase"
+            :class="winner === 'player' ? 'text-neon-emerald' : 'text-slate-500'"
+          >{{ winner === 'player' ? 'VICTORY' : 'GAME OVER' }}</p>
+          <p class="font-display font-bold text-4xl text-white">{{ playerScore }}</p>
+          <p class="hud-label text-[10px]">YOUR SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">↑ ↓ to move · first to {{ WIN_SCORE }} wins</p>
   </div>
 </template>

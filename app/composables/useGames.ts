@@ -3,14 +3,24 @@ import { ControlLayout } from '~/types'
 import {
   AsteroidDodge,
   BreakoutGame,
+  ColorSurge,
+  CosmicMinesweeper,
   CosmicPong,
   FlappyRocket,
   Game2048,
+  GravityFlip,
+  LaserBounce,
   MemoryMatch,
   MeteorCatcher,
+  NeonRunner,
   NeonTetris,
+  NeonWhack,
+  OrbitShield,
   SnakeGame,
   SpaceInvaders,
+  StarCatcher,
+  TypeAttack,
+  WarpTunnel,
 } from '#components'
 
 export type GameSlug =
@@ -24,6 +34,16 @@ export type GameSlug =
   | 'neon-tetris'
   | 'cosmic-pong'
   | 'meteor-catcher'
+  | 'neon-runner'
+  | 'gravity-flip'
+  | 'orbit-shield'
+  | 'star-catcher'
+  | 'cosmic-minesweeper'
+  | 'type-attack'
+  | 'neon-whack'
+  | 'laser-bounce'
+  | 'warp-tunnel'
+  | 'color-surge'
 
 export interface GameEntry {
   slug: GameSlug
@@ -136,6 +156,106 @@ export const games: GameEntry[] = [
     color: 'neon-emerald',
     component: MeteorCatcher,
     controls: ControlLayout.None,
+  },
+  {
+    slug: 'neon-runner',
+    id: 'NeonRunner',
+    name: 'Neon Runner',
+    desc: 'Dodge neon barriers in this endless side-scrolling runner — jump to survive.',
+    genre: 'ONE-TAP',
+    color: 'neon-blue',
+    component: NeonRunner,
+    controls: ControlLayout.Tap,
+  },
+  {
+    slug: 'gravity-flip',
+    id: 'GravityFlip',
+    name: 'Gravity Flip',
+    desc: 'Flip gravity to navigate a shifting sine-wave tunnel — how far can you go?',
+    genre: 'ONE-TAP',
+    color: 'neon-purple',
+    component: GravityFlip,
+    controls: ControlLayout.Tap,
+  },
+  {
+    slug: 'orbit-shield',
+    id: 'OrbitShield',
+    name: 'Orbit Shield',
+    desc: 'Rotate a neon arc shield to deflect incoming meteors and protect your planet.',
+    genre: 'ARCADE',
+    color: 'neon-emerald',
+    component: OrbitShield,
+    controls: ControlLayout.Lr,
+  },
+  {
+    slug: 'star-catcher',
+    id: 'StarCatcher',
+    name: 'Star Catcher',
+    desc: 'Pilot a spaceship to catch falling stars while dodging pink energy bombs.',
+    genre: 'CASUAL',
+    color: 'neon-pink',
+    component: StarCatcher,
+    controls: ControlLayout.Lr,
+  },
+  {
+    slug: 'cosmic-minesweeper',
+    id: 'CosmicMinesweeper',
+    name: 'Cosmic Minesweeper',
+    desc: 'Sweep a 9×9 minefield in deep space. Reveal cells, flag mines — clear the field without detonating.',
+    genre: 'PUZZLE',
+    color: 'neon-blue',
+    component: CosmicMinesweeper,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'type-attack',
+    id: 'TypeAttack',
+    name: 'Type Attack',
+    desc: 'Asteroids rain down carrying space words. Type them out before they hit the ground.',
+    genre: 'ARCADE',
+    color: 'neon-purple',
+    component: TypeAttack,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'neon-whack',
+    id: 'NeonWhack',
+    name: 'Neon Whack',
+    desc: 'Whack glowing alien heads as they pop out of space-station ports. Click fast before they disappear.',
+    genre: 'CASUAL',
+    color: 'neon-emerald',
+    component: NeonWhack,
+    controls: ControlLayout.None,
+  },
+  {
+    slug: 'laser-bounce',
+    id: 'LaserBounce',
+    name: 'Laser Bounce',
+    desc: 'Aim your laser and ricochet shots off arena walls to destroy neon targets. Clear every target before shots run out.',
+    genre: 'PUZZLE',
+    color: 'neon-pink',
+    component: LaserBounce,
+    controls: ControlLayout.LrFire,
+  },
+  {
+    slug: 'warp-tunnel',
+    id: 'WarpTunnel',
+    name: 'Warp Tunnel',
+    desc: 'Navigate a glowing ship through a pulsating wormhole. The tunnel tightens as you survive.',
+    genre: 'SURVIVAL',
+    color: 'neon-blue',
+    component: WarpTunnel,
+    controls: ControlLayout.UpDown,
+  },
+  {
+    slug: 'color-surge',
+    id: 'ColorSurge',
+    name: 'Color Surge',
+    desc: 'Aim and shoot colored bubbles to match groups of 3 or more. Chain pops to rack up massive points.',
+    genre: 'ARCADE',
+    color: 'neon-emerald',
+    component: ColorSurge,
+    controls: ControlLayout.LrFire,
   },
 ]
 

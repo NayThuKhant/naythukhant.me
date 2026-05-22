@@ -52,6 +52,18 @@ function startGame() {
   state.value = 'playing'
 }
 
+function reset() {
+  const b = emptyBoard()
+  spawn(b); spawn(b)
+  board.value = b
+  score.value = 0
+}
+
+function restart() {
+  reset()
+  state.value = 'playing'
+}
+
 function move(dir: Dir) {
   if (state.value !== 'playing') return
   const rotations = { left: 0, up: 3, right: 2, down: 1 }[dir]
@@ -85,7 +97,8 @@ function onKey(e: KeyboardEvent) {
   const map: Record<string, Dir> = { ArrowLeft:'left', ArrowRight:'right', ArrowUp:'up', ArrowDown:'down' }
   if (!(e.key in map)) return
   e.preventDefault()
-  if (state.value !== 'playing') { startGame(); return }
+  if (state.value === 'idle') { startGame(); return }
+  if (state.value !== 'playing') return
   move(map[e.key]!)
 }
 
@@ -137,14 +150,28 @@ onUnmounted(() => window.removeEventListener('keydown', onKey))
 
       <Transition name="fade">
         <div
-          v-if="state !== 'playing'"
+          v-if="state === 'idle'"
           class="absolute inset-0 rounded-2xl flex flex-col items-center justify-center bg-black/75 backdrop-blur-sm gap-3"
         >
-          <p class="font-display font-bold text-2xl" :class="state === 'won' ? 'text-neon-emerald' : 'text-white'">
-            {{ state === 'idle' ? '2048' : state === 'won' ? 'YOU WIN!' : 'GAME OVER' }}
-          </p>
-          <p class="font-mono text-xs text-slate-400">Press any arrow key or click to {{ state === 'idle' ? 'start' : 'restart' }}</p>
-          <button class="btn-neon-blue mt-1" @click="startGame">{{ state === 'idle' ? 'PLAY' : 'PLAY AGAIN' }}</button>
+          <p class="font-display font-bold text-2xl text-white">2048</p>
+          <p class="font-mono text-xs text-slate-400">Press any arrow key or click to start</p>
+          <button class="btn-neon-blue mt-1" @click.stop="startGame">START</button>
+        </div>
+      </Transition>
+
+      <Transition name="fade">
+        <div
+          v-if="state === 'won' || state === 'over'"
+          class="absolute inset-0 rounded-2xl flex items-center justify-center bg-black/75 backdrop-blur-sm"
+        >
+          <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+            <p class="font-mono text-[10px] tracking-[0.2em] uppercase" :class="state === 'won' ? 'text-neon-emerald' : 'text-slate-500'">
+              {{ state === 'won' ? 'YOU WIN!' : 'GAME OVER' }}
+            </p>
+            <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+            <p class="hud-label text-[10px]">SCORE</p>
+            <button class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer" @click.stop="restart">↺ RESTART</button>
+          </div>
         </div>
       </Transition>
     </div>

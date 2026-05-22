@@ -88,28 +88,16 @@ function frame(ts: number) {
   ctx.textAlign = 'left';  ctx.fillText(`SCORE: ${score.value}`, 12, 22)
   ctx.textAlign = 'right'; ctx.fillText(`${'♦'.repeat(lives.value)}${'◇'.repeat(LIFE_MAX - lives.value)}`, W - 12, 22)
 
-  if (state.value !== 'playing') {
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'; ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    if (state.value === 'idle') {
-      ctx.fillStyle = '#f97316'
-      ctx.font = "bold 22px 'Space Grotesk', sans-serif"
-      ctx.fillText('METEOR CATCHER', W / 2, H / 2 - 24)
-      ctx.fillStyle = 'rgba(200,220,255,0.5)'
-      ctx.font = "11px 'Courier New', monospace"
-      ctx.fillText('Tap meteors before they hit ground', W / 2, H / 2 + 10)
-      ctx.fillText('Tap to start', W / 2, H / 2 + 28)
-    } else {
-      ctx.fillStyle = '#f472b6'
-      ctx.font = "bold 22px 'Space Grotesk', sans-serif"
-      ctx.fillText('GAME OVER', W / 2, H / 2 - 36)
-      ctx.fillStyle = 'rgba(200,220,255,0.8)'
-      ctx.font = "14px 'Courier New', monospace"
-      ctx.fillText(`Score: ${score.value}`, W / 2, H / 2)
-      ctx.fillStyle = 'rgba(200,220,255,0.45)'
-      ctx.font = "11px 'Courier New', monospace"
-      ctx.fillText('Tap to retry', W / 2, H / 2 + 36)
-    }
+    ctx.fillStyle = '#f97316'
+    ctx.font = "bold 22px 'Space Grotesk', sans-serif"
+    ctx.fillText('METEOR CATCHER', W / 2, H / 2 - 24)
+    ctx.fillStyle = 'rgba(200,220,255,0.5)'
+    ctx.font = "11px 'Courier New', monospace"
+    ctx.fillText('Tap meteors before they hit ground', W / 2, H / 2 + 10)
+    ctx.fillText('Tap to start', W / 2, H / 2 + 28)
   }
 }
 
@@ -131,14 +119,20 @@ function startGame() {
   score.value = 0; lives.value = LIFE_MAX; state.value = 'playing'
 }
 
+function restart() {
+  startGame()
+}
+
 function onClick(e: MouseEvent) {
-  if (state.value !== 'playing') { startGame(); return }
+  if (state.value === 'over') return
+  if (state.value === 'idle') { startGame(); return }
   hitTest(e.clientX, e.clientY)
 }
 
 function onTouch(e: TouchEvent) {
   e.preventDefault()
-  if (state.value !== 'playing') { startGame(); return }
+  if (state.value === 'over') return
+  if (state.value === 'idle') { startGame(); return }
   for (const t of Array.from(e.changedTouches)) hitTest(t.clientX, t.clientY)
 }
 
@@ -151,12 +145,30 @@ onUnmounted(() => cancelAnimationFrame(raf))
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <canvas
-      ref="canvasEl"
-      class="rounded-xl border border-white/10 block cursor-crosshair touch-none"
-      @click="onClick"
-      @touchstart="onTouch"
-    />
+    <div class="relative">
+      <canvas
+        ref="canvasEl"
+        class="rounded-xl border border-white/10 block cursor-crosshair touch-none"
+        @click="onClick"
+        @touchstart="onTouch"
+      />
+
+      <div
+        v-if="state === 'over'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
+          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+          <p class="hud-label text-[10px]">SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">Tap/click meteors before they hit ground</p>
   </div>
 </template>

@@ -136,27 +136,15 @@ function frame(ts: number) {
     for (const [cx, cy] of piece.cells) drawCell(ctx, cx + piece.x, cy + piece.y, piece.color)
   }
 
-  if (state.value !== 'playing') {
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.82)'; ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    if (state.value === 'idle') {
-      ctx.fillStyle = '#00d4ff'
-      ctx.font = "bold 22px 'Space Grotesk', sans-serif"
-      ctx.fillText('NEON TETRIS', W / 2, H / 2 - 24)
-      ctx.fillStyle = 'rgba(200,220,255,0.5)'
-      ctx.font = "11px 'Courier New', monospace"
-      ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 12)
-    } else {
-      ctx.fillStyle = '#f472b6'
-      ctx.font = "bold 22px 'Space Grotesk', sans-serif"
-      ctx.fillText('GAME OVER', W / 2, H / 2 - 36)
-      ctx.fillStyle = 'rgba(200,220,255,0.8)'
-      ctx.font = "14px 'Courier New', monospace"
-      ctx.fillText(`Score: ${score.value}`, W / 2, H / 2)
-      ctx.fillStyle = 'rgba(200,220,255,0.45)'
-      ctx.font = "11px 'Courier New', monospace"
-      ctx.fillText('Press any arrow key to retry', W / 2, H / 2 + 36)
-    }
+    ctx.fillStyle = '#00d4ff'
+    ctx.font = "bold 22px 'Space Grotesk', sans-serif"
+    ctx.fillText('NEON TETRIS', W / 2, H / 2 - 24)
+    ctx.fillStyle = 'rgba(200,220,255,0.5)'
+    ctx.font = "11px 'Courier New', monospace"
+    ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 12)
   }
 }
 
@@ -165,10 +153,15 @@ function start() {
   piece = randomPiece(); nextPiece = randomPiece(); state.value = 'playing'
 }
 
+function restart() {
+  start()
+}
+
 function onKey(e: KeyboardEvent) {
   if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) return
   e.preventDefault()
-  if (state.value !== 'playing') { start(); return }
+  if (state.value === 'idle') { start(); return }
+  if (state.value !== 'playing') return
   if (!piece) return
   if (e.key === 'ArrowLeft'  && valid(piece.cells, piece.x - 1, piece.y)) piece.x--
   if (e.key === 'ArrowRight' && valid(piece.cells, piece.x + 1, piece.y)) piece.x++
@@ -211,7 +204,25 @@ onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('keydo
         <p class="font-mono font-bold text-white text-base leading-tight">{{ level }}</p>
       </div>
     </div>
-    <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+    <div class="relative">
+      <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+
+      <div
+        v-if="state === 'over'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
+          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+          <p class="hud-label text-[10px]">SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">← → move · ↑ rotate · ↓ drop</p>
   </div>
 </template>

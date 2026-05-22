@@ -92,30 +92,22 @@ function frame(ts: number) {
   }
 
   // Overlays
-  if (state.value !== 'playing') {
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.78)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-
-    if (state.value === 'idle') {
-      ctx.fillStyle = '#00d4ff'
-      ctx.font = "bold 26px 'Space Grotesk', sans-serif"
-      ctx.fillText('NEON SNAKE', W / 2, H / 2 - 28)
-      ctx.fillStyle = 'rgba(200,220,255,0.55)'
-      ctx.font = "13px 'Courier New', monospace"
-      ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 10)
-    } else {
-      ctx.fillStyle = '#f472b6'
-      ctx.font = "bold 26px 'Space Grotesk', sans-serif"
-      ctx.fillText('GAME OVER', W / 2, H / 2 - 40)
-      ctx.fillStyle = 'rgba(200,220,255,0.80)'
-      ctx.font = "15px 'Courier New', monospace"
-      ctx.fillText(`Score: ${score.value}`, W / 2, H / 2)
-      ctx.fillStyle = 'rgba(200,220,255,0.45)'
-      ctx.font = "12px 'Courier New', monospace"
-      ctx.fillText('Press any arrow key to retry', W / 2, H / 2 + 38)
-    }
+    ctx.fillStyle = '#00d4ff'
+    ctx.font = "bold 26px 'Space Grotesk', sans-serif"
+    ctx.fillText('NEON SNAKE', W / 2, H / 2 - 28)
+    ctx.fillStyle = 'rgba(200,220,255,0.55)'
+    ctx.font = "13px 'Courier New', monospace"
+    ctx.fillText('Press any arrow key to start', W / 2, H / 2 + 10)
   }
+}
+
+function restart() {
+  reset()
+  state.value = 'playing'
 }
 
 function onKey(e: KeyboardEvent) {
@@ -125,7 +117,8 @@ function onKey(e: KeyboardEvent) {
   const opposite: Record<Dir, Dir> = { up:'down', down:'up', left:'right', right:'left' }
   if (!(e.key in arrowMap)) return
   e.preventDefault()
-  if (state.value !== 'playing') { reset(); state.value = 'playing'; return }
+  if (state.value === 'idle') { reset(); state.value = 'playing'; return }
+  if (state.value !== 'playing') return
   const d = arrowMap[e.key]!
   if (d !== opposite[dir]) nextDir = d
 }
@@ -144,7 +137,25 @@ onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('keydo
       <p class="hud-label text-[10px]">SCORE</p>
       <p class="font-mono font-bold text-white text-lg leading-tight">{{ score }}</p>
     </div>
-    <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+    <div class="relative">
+      <canvas ref="canvasEl" class="rounded-xl border border-white/10 block" />
+
+      <div
+        v-if="state === 'over'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
+          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+          <p class="hud-label text-[10px]">SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">Arrow keys to move • eat green orbs • don't crash</p>
   </div>
 </template>

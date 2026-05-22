@@ -52,6 +52,11 @@ function reset() {
 
 function startGame() { reset(); state.value = 'playing' }
 
+function restart() {
+  reset()
+  state.value = 'playing'
+}
+
 function frame() {
   raf = requestAnimationFrame(frame)
   const ctx = canvasEl.value?.getContext('2d')
@@ -159,23 +164,14 @@ function frame() {
   ctx.textAlign = 'right'
   ctx.fillText(`♥ `.repeat(lives.value).trim(), W - 12, 22)
 
-  // Overlays
-  if (state.value !== 'playing') {
+  // Overlays (idle title screen only — over/won handled by HTML popup)
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.80)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    const label = state.value === 'idle' ? 'COSMIC BREAKOUT'
-                : state.value === 'won'  ? 'STAGE CLEAR!'
-                :                          'GAME OVER'
-    const color = state.value === 'won' ? '#00ff88' : '#00d4ff'
-    ctx.fillStyle = color
+    ctx.fillStyle = '#00d4ff'
     ctx.font = "bold 28px 'Space Grotesk', sans-serif"
-    ctx.fillText(label, W / 2, H / 2 - 36)
-    if (state.value !== 'idle') {
-      ctx.fillStyle = 'rgba(200,220,255,0.75)'
-      ctx.font = "15px 'Courier New', monospace"
-      ctx.fillText(`Score: ${score.value}`, W / 2, H / 2 + 2)
-    }
+    ctx.fillText('COSMIC BREAKOUT', W / 2, H / 2 - 36)
     ctx.fillStyle = 'rgba(200,220,255,0.45)'
     ctx.font = "13px 'Courier New', monospace"
     ctx.fillText('Press SPACE or click to play', W / 2, H / 2 + 42)
@@ -187,7 +183,7 @@ function onKey(e: KeyboardEvent) {
   if (e.key === 'ArrowRight') { e.preventDefault(); keys.right = (e.type === 'keydown') }
   if (e.code === 'Space' && e.type === 'keydown') {
     e.preventDefault()
-    if (state.value !== 'playing') startGame()
+    if (state.value === 'idle') startGame()
   }
 }
 
@@ -206,11 +202,33 @@ onUnmounted(() => {
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <canvas
-      ref="canvasEl"
-      class="rounded-xl border border-white/10 block cursor-pointer"
-      @click="state !== 'playing' && startGame()"
-    />
+    <div class="relative">
+      <canvas
+        ref="canvasEl"
+        class="rounded-xl border border-white/10 block cursor-pointer"
+        @click="state === 'idle' && startGame()"
+      />
+
+      <!-- Result popup -->
+      <div
+        v-if="state === 'over' || state === 'won'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p
+            class="font-mono text-[10px] tracking-[0.2em] uppercase"
+            :class="state === 'won' ? 'text-neon-emerald' : 'text-slate-500'"
+          >{{ state === 'won' ? 'VICTORY' : 'GAME OVER' }}</p>
+          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+          <p class="hud-label text-[10px]">SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">← → to move paddle • SPACE or click to start</p>
   </div>
 </template>

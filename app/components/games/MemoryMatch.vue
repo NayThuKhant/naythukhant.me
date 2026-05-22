@@ -73,6 +73,10 @@ function flip(card: Card) {
 
 const fmtTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2,'0')}:${String(s % 60).padStart(2,'0')}`
 
+function restart() {
+  startGame()
+}
+
 onUnmounted(() => clearInterval(timer))
 </script>
 
@@ -89,11 +93,18 @@ onUnmounted(() => clearInterval(timer))
       </div>
     </div>
 
-    <div v-if="state === 'idle' || state === 'won'" class="flex flex-col items-center gap-3">
-      <p v-if="state === 'won'" class="font-display font-bold text-2xl text-neon-emerald">ALL MATCHED!</p>
-      <p v-if="state === 'won'" class="font-mono text-sm text-slate-400">{{ flips }} flips · {{ fmtTime(seconds) }}</p>
-      <button class="btn-neon-blue" @click="startGame">{{ state === 'idle' ? 'START GAME' : 'PLAY AGAIN' }}</button>
+    <div v-if="state === 'idle'" class="flex flex-col items-center gap-3">
+      <button class="btn-neon-blue" @click.stop="startGame">START GAME</button>
       <p class="font-mono text-xs text-slate-600">Match all 8 planet pairs</p>
+    </div>
+
+    <div v-if="state === 'won'" class="flex flex-col items-center gap-3">
+      <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+        <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-neon-emerald">ALL MATCHED!</p>
+        <p class="font-display font-bold text-2xl text-white">{{ flips }} flips</p>
+        <p class="font-mono text-sm text-slate-400">{{ fmtTime(seconds) }}</p>
+        <button class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer" @click.stop="restart">↺ PLAY AGAIN</button>
+      </div>
     </div>
 
     <div v-else class="grid grid-cols-4 gap-2">

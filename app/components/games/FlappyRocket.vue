@@ -23,12 +23,18 @@ function reset() {
   score.value = 0; pipeSpeed = 2.4
 }
 
+function restart() {
+  reset()
+  state.value = 'playing'
+}
+
 function boost() {
-  if (state.value === 'idle' || state.value === 'over') {
-    reset(); state.value = 'playing'; return
-  }
+  if (state.value === 'over') return
+  if (state.value === 'idle') { startGame(); return }
   rvy = BOOST
 }
+
+function startGame() { reset(); state.value = 'playing' }
 
 function frame(ts: number) {
   raf = requestAnimationFrame(frame)
@@ -142,29 +148,17 @@ function frame(ts: number) {
   ctx.textAlign = 'center'
   ctx.fillText(score.value.toString(), W / 2, 36)
 
-  // Overlays
-  if (state.value !== 'playing') {
+  // Overlays (idle title screen only — over handled by HTML popup)
+  if (state.value === 'idle') {
     ctx.fillStyle = 'rgba(3,7,18,0.78)'
     ctx.fillRect(0, 0, W, H)
     ctx.textAlign = 'center'
-    if (state.value === 'idle') {
-      ctx.fillStyle = '#00d4ff'
-      ctx.font = "bold 24px 'Space Grotesk', sans-serif"
-      ctx.fillText('FLAPPY ROCKET', W / 2, H / 2 - 30)
-      ctx.fillStyle = 'rgba(200,220,255,0.55)'
-      ctx.font = "12px 'Courier New', monospace"
-      ctx.fillText('Click or SPACE to boost', W / 2, H / 2 + 12)
-    } else {
-      ctx.fillStyle = '#f472b6'
-      ctx.font = "bold 24px 'Space Grotesk', sans-serif"
-      ctx.fillText('CRASHED!', W / 2, H / 2 - 40)
-      ctx.fillStyle = 'rgba(200,220,255,0.80)'
-      ctx.font = "15px 'Courier New', monospace"
-      ctx.fillText(`Score: ${score.value}`, W / 2, H / 2 + 2)
-      ctx.fillStyle = 'rgba(200,220,255,0.45)'
-      ctx.font = "12px 'Courier New', monospace"
-      ctx.fillText('Click or SPACE to retry', W / 2, H / 2 + 40)
-    }
+    ctx.fillStyle = '#00d4ff'
+    ctx.font = "bold 24px 'Space Grotesk', sans-serif"
+    ctx.fillText('FLAPPY ROCKET', W / 2, H / 2 - 30)
+    ctx.fillStyle = 'rgba(200,220,255,0.55)'
+    ctx.font = "12px 'Courier New', monospace"
+    ctx.fillText('Click or SPACE to boost', W / 2, H / 2 + 12)
   }
 }
 
@@ -182,11 +176,30 @@ onUnmounted(() => { cancelAnimationFrame(raf); window.removeEventListener('keydo
 
 <template>
   <div class="flex flex-col items-center gap-3 select-none">
-    <canvas
-      ref="canvasEl"
-      class="rounded-xl border border-white/10 block cursor-pointer"
-      @click="boost"
-    />
+    <div class="relative">
+      <canvas
+        ref="canvasEl"
+        class="rounded-xl border border-white/10 block cursor-pointer"
+        @click="boost"
+      />
+
+      <!-- Result popup -->
+      <div
+        v-if="state === 'over'"
+        class="absolute inset-0 rounded-xl flex items-center justify-center"
+        style="background: rgba(3,7,18,0.88)"
+      >
+        <div class="flex flex-col items-center gap-4 border border-white/10 bg-white/[0.04] rounded-2xl px-10 py-8">
+          <p class="font-mono text-[10px] tracking-[0.2em] uppercase text-slate-500">GAME OVER</p>
+          <p class="font-display font-bold text-4xl text-white">{{ score }}</p>
+          <p class="hud-label text-[10px]">SCORE</p>
+          <button
+            class="mt-2 px-10 py-2.5 font-mono text-xs tracking-widest uppercase rounded-lg border border-neon-blue/30 bg-neon-blue/10 text-neon-blue hover:bg-neon-blue/20 hover:border-neon-blue/50 transition-all cursor-pointer"
+            @click.stop="restart"
+          >↺ RESTART</button>
+        </div>
+      </div>
+    </div>
     <p class="font-mono text-xs text-slate-600">Click or SPACE to boost • dodge the asteroid rings</p>
   </div>
 </template>
