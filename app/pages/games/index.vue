@@ -7,11 +7,16 @@ const { data: page } = await useAsyncData(() =>
   queryCollection('pages').path(route.path).first()
 )
 
+const seoTitle = page.value?.seo?.title ?? page.value?.title
+const seoDescription = page.value?.seo?.description ?? page.value?.description
+
 useSeoMeta({
-  title: computed(() => page.value?.seo.title ?? ''),
-  description: computed(() => page.value?.seo.description ?? ''),
-  ogTitle: computed(() => page.value?.seo.title ?? ''),
-  ogDescription: computed(() => page.value?.seo.description ?? ''),
+  title: computed(() => seoTitle),
+  description: computed(() => seoDescription),
+  ogTitle: computed(() => seoTitle),
+  ogDescription: computed(() => seoDescription),
+  twitterTitle: computed(() => seoTitle),
+  twitterDescription: computed(() => seoDescription),
   twitterCard: 'summary_large_image',
 })
 </script>
