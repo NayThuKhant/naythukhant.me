@@ -3,15 +3,15 @@ const { scrollFadeUp, staggered } = useAnimations()
 const { games } = useGames()
 const route = useRoute()
 
-const { data } = usePageLoad('page-games', {
-  page: () => queryCollection('pages').path(route.path).first(),
-})
+const { data: page } = await useAsyncData(() =>
+  queryCollection('pages').path(route.path).first()
+)
 
 useSeoMeta({
-  title: computed(() => data.value.page?.title ?? ''),
-  description: computed(() => data.value.page?.description ?? ''),
-  ogTitle: computed(() => data.value.page?.title ?? ''),
-  ogDescription: computed(() => data.value.page?.description ?? ''),
+  title: computed(() => page.value?.title ?? ''),
+  description: computed(() => page.value?.description ?? ''),
+  ogTitle: computed(() => page.value?.title ?? ''),
+  ogDescription: computed(() => page.value?.description ?? ''),
   twitterCard: 'summary_large_image',
 })
 </script>
@@ -27,8 +27,8 @@ useSeoMeta({
         class="mb-14"
       >
         <p class="hud-label mb-3">RECREATION MODULE</p>
-        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ data.page?.title }}</h1>
-        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ data.page?.description }}</p>
+        <h1 class="font-display font-bold text-5xl md:text-6xl text-white">{{ page?.title }}</h1>
+        <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ page?.description }}</p>
       </div>
 
       <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">

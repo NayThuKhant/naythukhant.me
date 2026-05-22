@@ -1,10 +1,7 @@
 <script setup lang="ts">
 const route = useRoute()
-const nuxtApp = useNuxtApp()
-const key = `post-${route.params.slug}`
-const { data: post } = await useAsyncData(key,
-  () => queryCollection('blog').path(`/blog/${route.params.slug}`).first(),
-  { getCachedData: (k) => nuxtApp.payload.data[k] ?? nuxtApp.static.data[k] },
+const { data: post } = await useAsyncData(
+  () => queryCollection('blog').path(`/blog/${route.params.slug}`).first()
 )
 if (!post.value) throw createError({ statusCode: 404, message: 'Post not found' })
 
