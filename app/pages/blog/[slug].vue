@@ -10,12 +10,12 @@ const formattedDate = computed(() =>
 )
 
 useSeoMeta({
-  title: post.value?.title,
-  description: post.value?.description,
-  ogTitle: post.value?.title,
-  ogDescription: post.value?.description,
-  twitterTitle: post.value?.title,
-  twitterDescription: post.value?.description,
+  title: post.value?.seo.title,
+  description: post.value?.seo.description,
+  ogTitle: post.value?.seo.title,
+  ogDescription: post.value?.seo.description,
+  twitterTitle: post.value?.seo.title,
+  twitterDescription: post.value?.seo.description,
   twitterCard: 'summary_large_image',
 })
 </script>
