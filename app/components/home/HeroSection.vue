@@ -29,17 +29,6 @@ const typeText = (text: string, speed = 22): Promise<void> =>
 const sleep = (ms: number) => new Promise<void>(r => setTimeout(r, ms))
 
 onMounted(async () => {
-  // On Vercel, the Nuxt SSR payload may not be restored synchronously before
-  // onMounted fires (nuxt-studio / hydration timing). Wait until config is ready
-  // so bootLines and taglines are populated before the sequence begins.
-  if (!config.value) {
-    await new Promise<void>(resolve => {
-      const stop = watch(config, (val) => {
-        if (val) { stop(); resolve() }
-      }, { immediate: true })
-    })
-  }
-
   await sleep(300)
   for (const line of bootLines.value) {
     if (cancelled) return
