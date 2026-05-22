@@ -44,6 +44,10 @@ export default defineContentConfig({
         tags: z.array(z.string()).default([]),
         coverImage: z.string().optional(),
         featured: z.boolean().default(false),
+        seo: z.object({
+          title: z.string(),
+          description: z.string(),
+        }).optional(),
       }),
     }),
     projects: defineCollection({
@@ -60,6 +64,10 @@ export default defineContentConfig({
         })).default([]),
         image: z.string().optional(),
         featured: z.boolean().default(false),
+        seo: z.object({
+          title: z.string(),
+          description: z.string(),
+        }).optional(),
       }),
     }),
     pages: defineCollection({

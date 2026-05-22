@@ -9,13 +9,16 @@ const formattedDate = computed(() =>
   new Date(post.value!.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
 )
 
+const seoTitle = post.value?.seo?.title ?? post.value?.title
+const seoDescription = post.value?.seo?.description ?? post.value?.summary
+
 useSeoMeta({
-  title: post.value?.seo.title,
-  description: post.value?.seo.description,
-  ogTitle: post.value?.seo.title,
-  ogDescription: post.value?.seo.description,
-  twitterTitle: post.value?.seo.title,
-  twitterDescription: post.value?.seo.description,
+  title: seoTitle,
+  description: seoDescription,
+  ogTitle: seoTitle,
+  ogDescription: seoDescription,
+  twitterTitle: seoTitle,
+  twitterDescription: seoDescription,
   twitterCard: 'summary_large_image',
 })
 </script>
