@@ -63,7 +63,7 @@ useSeoMeta({
             </div>
             <div>
               <h3 class="font-display font-semibold text-white text-base mb-1 group-hover:text-neon-blue transition-colors">{{ game.name }}</h3>
-              <p class="font-mono text-xs text-slate-500 leading-relaxed">{{ game.desc }}</p>
+              <p class="font-mono text-xs text-slate-500 leading-relaxed line-clamp-3">{{ game.desc }}</p>
             </div>
             <div class="mt-auto">
               <span class="font-mono text-xs text-slate-600 group-hover:text-neon-blue transition-colors tracking-widest uppercase">PLAY →</span>
