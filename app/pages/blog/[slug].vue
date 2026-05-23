@@ -12,12 +12,12 @@ const formattedDate = computed(() =>
 )
 
 useSeoMeta({
-  title: computed(() => post.value?.seo?.title ?? post.value?.title),
-  description: computed(() => post.value?.seo?.description ?? post.value?.description),
-  ogTitle: computed(() => post.value?.seo?.title ?? post.value?.title),
-  ogDescription: computed(() => post.value?.seo?.description ?? post.value?.description),
-  twitterTitle: computed(() => post.value?.seo?.title ?? post.value?.title),
-  twitterDescription: computed(() => post.value?.seo?.description ?? post.value?.description),
+  title: computed(() => post.value?.seo?.title),
+  description: computed(() => post.value?.seo?.description),
+  ogTitle: computed(() => post.value?.seo?.title),
+  ogDescription: computed(() => post.value?.seo?.description),
+  twitterTitle: computed(() => post.value?.seo?.title),
+  twitterDescription: computed(() => post.value?.seo?.description),
   twitterCard: 'summary_large_image',
 })
 </script>

@@ -5,12 +5,12 @@ const { data: page } = await useAsyncData('index', () =>
 )
 
 useSeoMeta({
-  title: computed(() => page.value?.seo?.title ?? page.value?.title),
-  description: computed(() => page.value?.seo?.description ?? page.value?.description),
-  ogTitle: computed(() => page.value?.seo?.title ?? page.value?.title),
-  ogDescription: computed(() => page.value?.seo?.description ?? page.value?.description),
-  twitterTitle: computed(() => page.value?.seo?.title ?? page.value?.title),
-  twitterDescription: computed(() => page.value?.seo?.description ?? page.value?.description),
+  title: computed(() => page.value?.seo?.title),
+  description: computed(() => page.value?.seo?.description),
+  ogTitle: computed(() => page.value?.seo?.title),
+  ogDescription: computed(() => page.value?.seo?.description),
+  twitterTitle: computed(() => page.value?.seo?.title),
+  twitterDescription: computed(() => page.value?.seo?.description),
   twitterCard: 'summary_large_image',
 })
 </script>
