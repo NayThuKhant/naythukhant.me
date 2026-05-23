@@ -2,11 +2,6 @@ import {defineContentConfig, defineCollection, z} from '@nuxt/content'
 import {BootLineType} from './app/types'
 
 
-const seo = z.object({
-    title: z.string(),
-    description: z.string(),
-}).optional()
-
 export default defineContentConfig({
     collections: {
         config: defineCollection({
@@ -50,7 +45,6 @@ export default defineContentConfig({
                 tags: z.array(z.string()).default([]),
                 coverImage: z.string().optional(),
                 featured: z.boolean().default(false),
-                seo
             }),
         }),
         projects: defineCollection({
@@ -67,7 +61,6 @@ export default defineContentConfig({
                 })).default([]),
                 image: z.string().optional(),
                 featured: z.boolean().default(false),
-                seo
             }),
         }),
         pages: defineCollection({
@@ -76,7 +69,6 @@ export default defineContentConfig({
             schema: z.object({
                 title: z.string(),
                 description: z.string().optional(),
-                seo
             }),
         }),
     },

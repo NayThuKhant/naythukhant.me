@@ -7,12 +7,12 @@ const { data: project } = await useAsyncData(
 )
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
 useSeoMeta({
-  title: computed(() => project.value?.seo?.title),
-  description: computed(() => project.value?.seo?.description),
-  ogTitle: computed(() => project.value?.seo?.title),
-  ogDescription: computed(() => project.value?.seo?.description),
-  twitterTitle: computed(() => project.value?.seo?.title),
-  twitterDescription: computed(() => project.value?.seo?.description),
+  title: computed(() => project.value?.seo?.title ?? project.value?.title),
+  description: computed(() => project.value?.seo?.description ?? project.value?.description),
+  ogTitle: computed(() => project.value?.seo?.title ?? project.value?.title),
+  ogDescription: computed(() => project.value?.seo?.description ?? project.value?.description),
+  twitterTitle: computed(() => project.value?.seo?.title ?? project.value?.title),
+  twitterDescription: computed(() => project.value?.seo?.description ?? project.value?.description),
   twitterCard: 'summary_large_image',
 })
 </script>
