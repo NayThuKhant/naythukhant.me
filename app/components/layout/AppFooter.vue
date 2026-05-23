@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ComponentSize } from '~/types'
 import useConfig from '~/composables/useConfig'
-const { data: config } = await useConfig()
+const { data: config } = useConfig()
 </script>
 
 <template>

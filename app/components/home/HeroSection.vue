@@ -3,7 +3,7 @@ import type { BootLine } from '~/types'
 import { BootLineType } from '~/types'
 
 import useConfig from '~/composables/useConfig'
-const { data: config } = await useConfig()
+const { data: config } = useConfig()
 
 const bootLines = computed(() => config.value?.bootLines ?? [])
 const taglines = computed(() => config.value?.taglines ?? [])

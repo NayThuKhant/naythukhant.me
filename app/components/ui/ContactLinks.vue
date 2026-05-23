@@ -9,7 +9,7 @@ withDefaults(defineProps<Props>(), {
   size: ComponentSize.Md,
 })
 
-const { data: config } = await useConfig()
+const { data: config } = useConfig()
 
 const contacts = computed(() => config.value?.contacts ?? [])
 </script>
