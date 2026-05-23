@@ -1,8 +1,12 @@
 <script setup lang="ts">
 const route = useRoute()
-const { getGameBySlug } = useGames()
+const { games, getGameBySlug } = useGames()
 
 const game = computed(() => getGameBySlug(String(route.params.slug)))
+
+const currentIndex = computed(() => games.findIndex(g => g.slug === route.params.slug))
+const prevGame = computed(() => currentIndex.value > 0 ? games[currentIndex.value - 1] : null)
+const nextGame = computed(() => currentIndex.value < games.length - 1 ? games[currentIndex.value + 1] : null)
 
 if (!game.value) throw createError({ statusCode: 404, message: 'Game not found' })
 
@@ -108,6 +112,35 @@ onMounted(() => {
       </button>
       <component :is="game!.component" />
       <GameKeyboard :layout="game!.controls" />
+    </div>
+
+    <!-- Prev / Next navigation -->
+    <div class="px-4 sm:px-6 max-w-5xl mx-auto mt-10">
+      <div class="flex items-center justify-between border-t border-white/5 pt-6">
+        <NuxtLink
+          v-if="prevGame"
+          :to="`/games/${prevGame.slug}`"
+          class="inline-flex items-center gap-2 font-mono text-xs text-slate-600 hover:text-neon-blue transition-colors tracking-widest uppercase"
+        >
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
+          </svg>
+          {{ prevGame.name }}
+        </NuxtLink>
+        <span v-else />
+
+        <NuxtLink
+          v-if="nextGame"
+          :to="`/games/${nextGame.slug}`"
+          class="inline-flex items-center gap-2 font-mono text-xs text-slate-600 hover:text-neon-blue transition-colors tracking-widest uppercase"
+        >
+          {{ nextGame.name }}
+          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
+          </svg>
+        </NuxtLink>
+        <span v-else />
+      </div>
     </div>
 
     <!-- CSS fullscreen overlay teleported to body to escape main's z-index stacking context -->
