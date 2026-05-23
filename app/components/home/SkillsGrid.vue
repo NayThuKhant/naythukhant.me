@@ -69,14 +69,14 @@ const skillMotion = computed(() => filtered.value.map((_, i) => staggered(i, 40)
       </div>
 
       <!-- Skills grid -->
-      <div class="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-8 lg:grid-cols-12 gap-2">
+      <div class="flex flex-wrap justify-center gap-2">
         <div
             v-for="(skill, index) in filtered"
             :key="skill.name"
             v-motion
             :initial="skillMotion[index]!.initial"
             :visible-once="skillMotion[index]!.visibleOnce"
-            class="glass-card p-2.5 flex flex-col items-center gap-1.5 cursor-default group"
+            class="glass-card p-2.5 flex flex-col items-center gap-1.5 cursor-default group w-[calc(25%-6px)] sm:w-[calc(12.5%-7px)] lg:w-[calc(8.333%-7px)]"
         >
           <Icon
               :name="skill.icon"

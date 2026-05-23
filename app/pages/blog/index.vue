@@ -75,8 +75,8 @@ useSeoMeta({
         >#{{ tag }}</button>
       </div>
 
-      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
-        <PostCard v-for="post in filtered" :key="post.path" :post="post" />
+      <div class="flex flex-wrap justify-center gap-5">
+        <PostCard v-for="post in filtered" :key="post.path" :post="post" class="w-full md:w-[calc(50%-10px)] lg:w-[calc(33.333%-14px)]" />
       </div>
 
       <p v-if="filtered.length === 0" class="font-mono text-sm text-slate-600 mt-16 text-center">

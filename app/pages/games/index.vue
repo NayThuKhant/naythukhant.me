@@ -34,13 +34,14 @@ useSeoMeta({
         <p class="text-slate-500 mt-4 font-mono text-sm max-w-lg">{{ page?.description }}</p>
       </div>
 
-      <div class="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div class="flex flex-wrap justify-center gap-4">
         <div
           v-for="(game, i) in games"
           :key="game.id"
           v-motion
           :initial="staggered(i, 60).initial"
           :visible-once="staggered(i, 60).visibleOnce"
+          class="w-full sm:w-[calc(50%-8px)] lg:w-[calc(33.333%-11px)] xl:w-[calc(25%-12px)]"
         >
           <NuxtLink
             :to="`/games/${game.slug}`"
