@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { injectHead } from '@unhead/vue'
+import { injectHead } from '#imports'
 import useConfig from '~/composables/useConfig'
 
 const { data: config } = useConfig()
