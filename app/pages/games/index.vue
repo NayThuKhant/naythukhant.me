@@ -8,16 +8,13 @@ const { data: page } = await useAsyncData(DataKey.PageGames, () =>
   queryCollection('pages').path(route.path).first()
 )
 
-const seoTitle = page.value?.seo?.title ?? page.value?.title
-const seoDescription = page.value?.seo?.description ?? page.value?.description
-
 useSeoMeta({
-  title: computed(() => seoTitle),
-  description: computed(() => seoDescription),
-  ogTitle: computed(() => seoTitle),
-  ogDescription: computed(() => seoDescription),
-  twitterTitle: computed(() => seoTitle),
-  twitterDescription: computed(() => seoDescription),
+  title: computed(() => page.value?.seo?.title ?? page.value?.title),
+  description: computed(() => page.value?.seo?.description ?? page.value?.description),
+  ogTitle: computed(() => page.value?.seo?.title ?? page.value?.title),
+  ogDescription: computed(() => page.value?.seo?.description ?? page.value?.description),
+  twitterTitle: computed(() => page.value?.seo?.title ?? page.value?.title),
+  twitterDescription: computed(() => page.value?.seo?.description ?? page.value?.description),
   twitterCard: 'summary_large_image',
 })
 </script>

@@ -12,12 +12,12 @@ provide('gameTitle', game.value.name)
 provide('gameSlug', game.value.slug)
 
 useSeoMeta({
-  title: game.value?.name,
-  description: game.value?.desc,
-  ogTitle: game.value?.name,
-  ogDescription: game.value?.desc,
-  twitterTitle: game.value?.name,
-  twitterDescription: game.value?.desc,
+  title: computed(() => game.value?.name),
+  description: computed(() => game.value?.desc),
+  ogTitle: computed(() => game.value?.name),
+  ogDescription: computed(() => game.value?.desc),
+  twitterTitle: computed(() => game.value?.name),
+  twitterDescription: computed(() => game.value?.desc),
   twitterCard: 'summary_large_image',
 })
 

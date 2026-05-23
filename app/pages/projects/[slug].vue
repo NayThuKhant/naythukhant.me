@@ -6,16 +6,13 @@ const { data: project } = await useAsyncData(
   () => queryCollection('projects').path(`/projects/${route.params.slug}`).first()
 )
 if (!project.value) throw createError({ statusCode: 404, message: 'Project not found' })
-const seoTitle = project.value?.seo?.title ?? project.value?.title
-const seoDescription = project.value?.seo?.description ?? project.value?.description
-
 useSeoMeta({
-  title: seoTitle,
-  description: seoDescription,
-  ogTitle: seoTitle,
-  ogDescription: seoDescription,
-  twitterTitle: seoTitle,
-  twitterDescription: seoDescription,
+  title: computed(() => project.value?.seo?.title ?? project.value?.title),
+  description: computed(() => project.value?.seo?.description ?? project.value?.description),
+  ogTitle: computed(() => project.value?.seo?.title ?? project.value?.title),
+  ogDescription: computed(() => project.value?.seo?.description ?? project.value?.description),
+  twitterTitle: computed(() => project.value?.seo?.title ?? project.value?.title),
+  twitterDescription: computed(() => project.value?.seo?.description ?? project.value?.description),
   twitterCard: 'summary_large_image',
 })
 </script>

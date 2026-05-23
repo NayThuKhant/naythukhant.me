@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2024-04-03',
   css: ['~/assets/css/main.css'],
   content: {
+    experimental: { sqliteConnector: 'native' },
     build: {
       markdown: {
         highlight: {
