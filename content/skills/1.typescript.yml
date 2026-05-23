@@ -1,4 +1,5 @@
 name: TypeScript
 icon: simple-icons:typescript
 tags:
-  - language
+  - frontend
+  - backend

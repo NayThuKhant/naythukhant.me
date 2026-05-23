@@ -1,4 +1,5 @@
 name: Sentry
 icon: simple-icons:sentry
 tags:
+  - devops
   - tools
