@@ -2,17 +2,19 @@
 import useConfig from '~/composables/useConfig'
 
 const { data: config } = await useConfig()
-const { origin } = useRequestURL()
+const { origin, href } = useRequestURL()
 
 useHead({
   titleTemplate: (title) => title ? `${title} · ${config.value?.name ?? ''}` : (config.value?.name ?? ''),
   htmlAttrs: { lang: 'en' },
   link: [
     { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
+    { rel: 'canonical', href },
   ],
 })
 
 useSeoMeta({
+  ogUrl: href,
   ogImage: `${origin}/logo.png`,
   twitterImage: `${origin}/logo.png`,
 })
