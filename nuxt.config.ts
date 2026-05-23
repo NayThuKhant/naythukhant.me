@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   compatibilityDate: '2024-04-03',
   css: ['~/assets/css/main.css'],
+  routeRules: {
+    '/_studio/**': { ssr: true },
+    '/**': { prerender: true }
+  },
   content: {
     experimental: { sqliteConnector: 'native' },
     build: {
