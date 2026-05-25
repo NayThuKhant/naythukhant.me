@@ -91,6 +91,30 @@ onMounted(() => {
 
       <h1 class="font-display font-bold text-3xl md:text-4xl text-white leading-tight">{{ game!.name }}</h1>
       <p class="text-slate-500 text-sm mt-2 max-w-xl">{{ game!.desc }}</p>
+
+      <div class="flex items-center gap-3 mt-4 flex-wrap">
+        <NuxtLink
+          v-if="prevGame"
+          :to="`/games/${prevGame.slug}`"
+          class="inline-flex items-center gap-1 font-mono text-[10px] text-slate-600 hover:text-neon-blue transition-colors tracking-widest uppercase border border-white/8 hover:border-neon-blue/30 rounded px-2 py-1"
+        >
+          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+          </svg>
+          {{ prevGame.name }}
+        </NuxtLink>
+
+        <NuxtLink
+          v-if="nextGame"
+          :to="`/games/${nextGame.slug}`"
+          class="inline-flex items-center gap-1 font-mono text-[10px] text-slate-600 hover:text-neon-blue transition-colors tracking-widest uppercase border border-white/8 hover:border-neon-blue/30 rounded px-2 py-1"
+        >
+          {{ nextGame.name }}
+          <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </NuxtLink>
+      </div>
     </div>
 
     <!-- Game area (native fullscreen or non-fullscreen) -->
@@ -112,35 +136,6 @@ onMounted(() => {
       </button>
       <component :is="game!.component" />
       <GameKeyboard :layout="game!.controls" />
-    </div>
-
-    <!-- Prev / Next navigation -->
-    <div class="px-4 sm:px-6 max-w-5xl mx-auto mt-10">
-      <div class="flex items-center justify-between border-t border-white/5 pt-6">
-        <NuxtLink
-          v-if="prevGame"
-          :to="`/games/${prevGame.slug}`"
-          class="inline-flex items-center gap-2 font-mono text-xs text-slate-600 hover:text-neon-blue transition-colors tracking-widest uppercase"
-        >
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 19l-7-7 7-7" />
-          </svg>
-          {{ prevGame.name }}
-        </NuxtLink>
-        <span v-else />
-
-        <NuxtLink
-          v-if="nextGame"
-          :to="`/games/${nextGame.slug}`"
-          class="inline-flex items-center gap-2 font-mono text-xs text-slate-600 hover:text-neon-blue transition-colors tracking-widest uppercase"
-        >
-          {{ nextGame.name }}
-          <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5l7 7-7 7" />
-          </svg>
-        </NuxtLink>
-        <span v-else />
-      </div>
     </div>
 
     <!-- CSS fullscreen overlay teleported to body to escape main's z-index stacking context -->
