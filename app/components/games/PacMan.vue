@@ -35,6 +35,8 @@ const lives = ref(3)
 let raf = 0
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
+const { chomp: sfxChomp, pop: sfxPop, die: sfxDie, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 let maze: number[][] = MAZE_TEMPLATE.map(r => [...r])
 interface Ghost { col: number; row: number; dir: [number,number]; scared: boolean; scaredTimer: number; color: string }
 let pac = { col: 10, row: 16, dir: [1,0] as [number,number], nextDir: [1,0] as [number,number], mouthAngle: 0, mouthOpen: true }
@@ -145,11 +147,12 @@ function draw() {
         if (pac.col < 0) pac.col = COLS - 1
         if (pac.col >= COLS) pac.col = 0
         const cell = maze[pac.row]![pac.col]
-        if (cell === 1) { maze[pac.row]![pac.col] = 3; score.value += 10; eatenDots++ }
+        if (cell === 1) { maze[pac.row]![pac.col] = 3; score.value += 10; eatenDots++; sfxChomp() }
         if (cell === 2) {
           maze[pac.row]![pac.col] = 3; score.value += 50; eatenDots++
           for (const g of ghosts) { g.scared = true; g.scaredTimer = 150 }
           powerTimer = 150
+          sfxPop()
         }
       }
     }
@@ -175,11 +178,12 @@ function draw() {
         }
         if (g.row === pac.row && g.col === pac.col) {
           if (g.scared) {
-            g.scared = false; score.value += 200
+            g.scared = false; score.value += 200; sfxPop()
             g.row = 10; g.col = 10
           } else {
             lives.value--
-            if (lives.value <= 0) { state.value = 'over'; return }
+            sfxDie()
+            if (lives.value <= 0) { sfxLose(); state.value = 'over'; return }
             pac.col = 10; pac.row = 16; pac.dir = [1,0]
             for (const gh of ghosts) { gh.row = 10; gh.col = 10; gh.scared = false }
           }
@@ -187,7 +191,7 @@ function draw() {
       }
     }
 
-    if (eatenDots >= totalDots) { state.value = 'won'; return }
+    if (eatenDots >= totalDots) { sfxWin(); state.value = 'won'; return }
   }
 
   // Draw ghosts

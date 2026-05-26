@@ -2,6 +2,8 @@
 const W = 480, H = 520
 const τ = Math.PI * 2
 
+const { shoot: sfxShoot, explosion: sfxExplosion, score: sfxScore, win: sfxWin, lose: sfxLose, levelUp: sfxLevelUp } = useGameSounds()
+
 const state = ref<'idle' | 'playing' | 'over' | 'won'>('idle')
 const score = ref(0)
 const wave  = ref(1)
@@ -64,6 +66,7 @@ function launch(mx: number, my: number) {
   }
   if (!nearest || nearest.ammo <= 0) return
   nearest.ammo--
+  sfxShoot()
   interceptors.push({
     x: nearest.x, y: H - 20,
     tx: mx, ty: my,
@@ -155,7 +158,7 @@ function draw() {
         for (const m of missiles) {
           if (!m.alive) continue
           if (Math.hypot(m.x - icp.tx, m.y - icp.ty) < icp.radius) {
-            m.alive = false; score.value += 25
+            m.alive = false; score.value += 25; sfxScore()
             explosions.push({ x: m.x, y: m.y, radius: 0, maxRadius: 15, growing: true, color: '#00d4ff' })
           }
         }
@@ -182,9 +185,10 @@ function draw() {
       const count = cities.filter(c => c.alive).length
       if (wave.value >= 5) {
         score.value += count * 100
-        state.value = count > 0 ? 'won' : 'over'
+        if (count > 0) { sfxWin(); state.value = 'won' } else { sfxLose(); state.value = 'over' }
         return
       } else if (count > 0) {
+        sfxLevelUp()
         wave.value++
         spawnInterval = Math.max(50, 120 - wave.value * 15)
         for (const base of bases) base.ammo = 15
@@ -192,7 +196,7 @@ function draw() {
     }
 
     // Check game over
-    if (!cities.some(c => c.alive)) { state.value = 'over'; return }
+    if (!cities.some(c => c.alive)) { sfxLose(); state.value = 'over'; return }
   }
 
   // Draw missiles
