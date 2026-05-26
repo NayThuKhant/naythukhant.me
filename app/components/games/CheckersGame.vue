@@ -2,6 +2,8 @@
 type Piece = { player: 1 | 2; king: boolean } | null
 type Board = (Piece)[][]
 
+const { place: sfxPlace, pop: sfxPop, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 const state    = ref<'idle' | 'playing' | 'won' | 'over'>('idle')
 const board    = ref<Board>([])
 const selected = ref<[number, number] | null>(null)
@@ -171,6 +173,8 @@ async function clickCell(r: number, c: number) {
   selected.value = null
   validMoves.value = []
 
+  if (move.captured) sfxPop(); else sfxPlace()
+
   // Multi-jump
   if (move.captured) {
     const furtherJumps = getJumps(nb, move.to[0], move.to[1])
@@ -186,6 +190,7 @@ async function clickCell(r: number, c: number) {
 
   if (!allMoves(nb, 2).length || countPieces(nb, 2) === 0) {
     score.value = countPieces(nb, 2) === 0 ? 12 : countPieces(nb, 1)
+    sfxWin()
     state.value = 'won'; return
   }
 
@@ -201,6 +206,7 @@ async function clickCell(r: number, c: number) {
   cpuBusy.value = false
 
   if (!allMoves(nb, 1).length || countPieces(nb, 1) === 0) {
+    sfxLose()
     state.value = 'over'
   }
 }

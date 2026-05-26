@@ -17,6 +17,8 @@ const CATEGORIES = [
 
 type Cat = typeof CATEGORIES[number]['key']
 
+const { roll: sfxRoll, score: sfxScore, win: sfxWin } = useGameSounds()
+
 const state    = ref<'idle' | 'playing' | 'won'>('idle')
 const dice     = ref<number[]>([1,1,1,1,1])
 const held     = ref<boolean[]>([false,false,false,false,false])
@@ -79,6 +81,7 @@ function rollDice() {
   if (state.value !== 'playing' || rolls.value >= 3) return
   dice.value = dice.value.map((d, i) => held.value[i] ? d : Math.ceil(Math.random() * 6))
   rolls.value++
+  sfxRoll()
 }
 
 function toggleHold(i: number) {
@@ -91,12 +94,14 @@ function scoreCategory(key: Cat) {
   const val = calcCategory(key, dice.value)
   scores.value = { ...scores.value, [key]: val }
   total.value += val
+  sfxScore()
   turn.value++
   rolls.value = 0
   held.value = [false,false,false,false,false]
   dice.value = [1,1,1,1,1]
   if (turn.value >= CATEGORIES.length) {
     score.value = total.value
+    sfxWin()
     state.value = 'won'
   }
 }

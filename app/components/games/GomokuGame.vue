@@ -2,12 +2,17 @@
 const SIZE = 15
 type Cell = 0 | 1 | 2
 
-const state = ref<'idle' | 'playing' | 'won' | 'over'>('idle')
-const board = ref<Cell[][]>([])
-const moves = ref(0)
-const score = ref(0)
-const hover = ref<{ r: number; c: number } | null>(null)
-const cpuBusy = ref(false)
+const { place: sfxPlace, win: sfxWin, lose: sfxLose } = useGameSounds()
+
+const state    = ref<'idle' | 'playing' | 'won' | 'over'>('idle')
+const board    = ref<Cell[][]>([])
+const moves    = ref(0)
+const score    = ref(0)
+const hover    = ref<{ r: number; c: number } | null>(null)
+const cpuBusy  = ref(false)
+const winCells = ref<[number, number][]>([])
+
+const winSet = computed(() => new Set(winCells.value.map(([r, c]) => `${r},${c}`)))
 
 function makeBoard(): Cell[][] {
   return Array.from({ length: SIZE }, () => Array(SIZE).fill(0) as Cell[])
@@ -20,6 +25,23 @@ function countDir(b: Cell[][], r: number, c: number, dr: number, dc: number, pla
     count++; nr += dr; nc += dc
   }
   return count
+}
+
+function getWinCells(b: Cell[][], r: number, c: number, player: Cell): [number, number][] {
+  const dirs = [[0,1],[1,0],[1,1],[1,-1]] as const
+  for (const [dr, dc] of dirs) {
+    const cells: [number, number][] = [[r, c]]
+    let nr = r + dr, nc = c + dc
+    while (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && b[nr]![nc] === player) {
+      cells.push([nr, nc]); nr += dr; nc += dc
+    }
+    nr = r - dr; nc = c - dc
+    while (nr >= 0 && nr < SIZE && nc >= 0 && nc < SIZE && b[nr]![nc] === player) {
+      cells.push([nr, nc]); nr -= dr; nc -= dc
+    }
+    if (cells.length >= 5) return cells
+  }
+  return []
 }
 
 function checkWin(b: Cell[][], r: number, c: number, player: Cell): boolean {
@@ -49,7 +71,6 @@ function cpuMove(b: Cell[][]): { r: number; c: number } {
   for (let r = 0; r < SIZE; r++) {
     for (let c = 0; c < SIZE; c++) {
       if (b[r]![c] !== 0) continue
-      // Check if any stone is nearby
       let hasNeighbor = false
       for (let dr = -2; dr <= 2 && !hasNeighbor; dr++) {
         for (let dc = -2; dc <= 2 && !hasNeighbor; dc++) {
@@ -58,7 +79,6 @@ function cpuMove(b: Cell[][]): { r: number; c: number } {
         }
       }
       if (!hasNeighbor && (r !== 7 || c !== 7)) continue
-
       const cpuScore = scorePos(b, r, c, 2)
       const playerScore = scorePos(b, r, c, 1)
       const total = cpuScore * 1.1 + playerScore
@@ -71,6 +91,7 @@ function cpuMove(b: Cell[][]): { r: number; c: number } {
 function startGame() {
   board.value = makeBoard()
   moves.value = 0
+  winCells.value = []
   cpuBusy.value = false
   state.value = 'playing'
 }
@@ -81,7 +102,15 @@ async function place(r: number, c: number) {
   b[r]![c] = 1
   moves.value++
   board.value = b
-  if (checkWin(b, r, c, 1)) { score.value = moves.value; state.value = 'won'; return }
+  sfxPlace()
+
+  if (checkWin(b, r, c, 1)) {
+    winCells.value = getWinCells(b, r, c, 1)
+    score.value = moves.value
+    sfxWin()
+    setTimeout(() => { state.value = 'won' }, 1400)
+    return
+  }
 
   cpuBusy.value = true
   await new Promise(res => setTimeout(res, 200))
@@ -93,10 +122,18 @@ async function place(r: number, c: number) {
   moves.value++
   board.value = nb
   cpuBusy.value = false
-  if (checkWin(nb, cr, cc, 2)) { state.value = 'over' }
+
+  if (checkWin(nb, cr, cc, 2)) {
+    winCells.value = getWinCells(nb, cr, cc, 2)
+    sfxLose()
+    setTimeout(() => { state.value = 'over' }, 1400)
+  }
 }
 
-function restart() { startGame() }
+function restart() {
+  winCells.value = []
+  startGame()
+}
 </script>
 
 <template>
@@ -129,23 +166,13 @@ function restart() { startGame() }
         :style="{ width: `${SIZE * 28}px`, height: `${SIZE * 28}px`, background: '#070a13' }"
       >
         <!-- Grid lines -->
-        <svg
-          class="absolute inset-0 pointer-events-none"
-          :width="SIZE * 28"
-          :height="SIZE * 28"
-        >
-          <line
-            v-for="i in SIZE"
-            :key="`v${i}`"
+        <svg class="absolute inset-0 pointer-events-none" :width="SIZE * 28" :height="SIZE * 28">
+          <line v-for="i in SIZE" :key="`v${i}`"
             :x1="(i - 0.5) * 28" :y1="14" :x2="(i - 0.5) * 28" :y2="(SIZE - 0.5) * 28"
-            stroke="rgba(255,255,255,0.08)" stroke-width="1"
-          />
-          <line
-            v-for="i in SIZE"
-            :key="`h${i}`"
+            stroke="rgba(255,255,255,0.08)" stroke-width="1" />
+          <line v-for="i in SIZE" :key="`h${i}`"
             :x1="14" :y1="(i - 0.5) * 28" :x2="(SIZE - 0.5) * 28" :y2="(i - 0.5) * 28"
-            stroke="rgba(255,255,255,0.08)" stroke-width="1"
-          />
+            stroke="rgba(255,255,255,0.08)" stroke-width="1" />
         </svg>
 
         <!-- Cells -->
@@ -164,13 +191,18 @@ function restart() { startGame() }
           >
             <div
               v-if="board[r-1]![c-1] !== 0"
-              class="w-5 h-5 rounded-full border"
-              :class="board[r-1]![c-1] === 1
-                ? 'bg-slate-100 border-white shadow-[0_0_6px_white]'
-                : 'bg-neon-emerald border-emerald-300 shadow-[0_0_8px_#00ff88]'"
+              class="w-5 h-5 rounded-full border transition-all duration-300"
+              :class="[
+                board[r-1]![c-1] === 1
+                  ? 'bg-slate-100 border-white shadow-[0_0_6px_white]'
+                  : 'bg-neon-emerald border-emerald-300 shadow-[0_0_8px_#00ff88]',
+                winSet.has(`${r-1},${c-1}`)
+                  ? 'scale-125 ring-2 ring-yellow-400 shadow-[0_0_16px_#facc15] animate-pulse'
+                  : '',
+              ]"
             />
             <div
-              v-else-if="hover?.r === r-1 && hover?.c === c-1 && !cpuBusy"
+              v-else-if="hover?.r === r-1 && hover?.c === c-1 && !cpuBusy && state === 'playing'"
               class="w-4 h-4 rounded-full bg-slate-300/30 border border-slate-300/40"
             />
           </div>

@@ -2,6 +2,8 @@
 type Difficulty = 'easy' | 'medium' | 'hard'
 const REMOVE_COUNT: Record<Difficulty, number> = { easy: 30, medium: 40, hard: 50 }
 
+const { click: sfxClick, wrong: sfxWrong, win: sfxWin } = useGameSounds()
+
 const state      = ref<'idle' | 'playing' | 'won'>('idle')
 const puzzle     = ref<number[][]>([])   // 0 = empty
 const solution   = ref<number[][]>([])
@@ -96,9 +98,10 @@ function enterNumber(n: number) {
   p[r]![c] = p[r]![c] === n ? 0 : n
   puzzle.value = p
 
-  // Clear notes for this cell
   notes.value[r]![c] = new Set()
 
+  if (p[r]![c] !== 0 && p[r]![c] !== solution.value[r]![c]) sfxWrong()
+  else sfxClick()
   checkWin()
 }
 
@@ -108,6 +111,7 @@ function checkWin() {
   }
   clearInterval(timer)
   score.value = seconds.value
+  sfxWin()
   state.value = 'won'
 }
 

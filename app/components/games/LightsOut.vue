@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const SIZE = 5
+const { click: sfxClick, win: sfxWin } = useGameSounds()
+
 const state = ref<'idle' | 'playing' | 'won'>('idle')
 const grid = ref<boolean[][]>([])
 const moves = ref(0)
@@ -30,8 +32,10 @@ function click(r: number, c: number) {
   if (state.value !== 'playing') return
   grid.value = applyToggle(grid.value, r, c)
   moves.value++
+  sfxClick()
   if (grid.value.every(row => row.every(cell => !cell))) {
     score.value = moves.value
+    sfxWin()
     state.value = 'won'
   }
 }

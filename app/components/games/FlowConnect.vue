@@ -18,6 +18,8 @@ const PUZZLES: Array<{ size: number; pairs: [number, number, number][][] }> = [
 
 type Path = { cells: [number, number][]; color: number }
 
+const { click: sfxClick, correct: sfxCorrect, win: sfxWin } = useGameSounds()
+
 const state     = ref<'idle' | 'playing' | 'won'>('idle')
 const gridSize  = ref(6)
 const endpoints = ref<Map<string, number>>(new Map())  // "r,c" -> colorIdx
@@ -67,11 +69,10 @@ function mouseDown(r: number, c: number) {
   if (state.value !== 'playing') return
   const col = colorAt(r, c)
   if (col === null) return
-  // Start drawing from endpoint or existing path
   const ep = endpointColor(r, c)
   const activeColor = ep !== undefined ? ep : col
-  // Clear existing path of same color
   paths.value = paths.value.filter(p => p.color !== activeColor)
+  sfxClick()
   drawing.value = { color: activeColor, cells: [[r, c]] }
 }
 
@@ -105,6 +106,7 @@ function mouseEnter(r: number, c: number) {
   if (ep === d.color) {
     paths.value.push({ ...d, cells: [...d.cells] })
     moves.value++
+    sfxCorrect()
     drawing.value = null
     checkWin()
   }
@@ -121,6 +123,7 @@ function checkWin() {
   for (const p of paths.value) p.cells.forEach(([r,c]) => covered.add(key(r, c)))
   if (covered.size === totalCells) {
     score.value = moves.value
+    sfxWin()
     state.value = 'won'
   }
 }

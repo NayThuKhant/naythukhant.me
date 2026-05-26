@@ -51,6 +51,8 @@ let playerTrail: { x: number; y: number }[] = []
 let deathAnim  = 0
 let lastScore  = 0  // track score increments for popup
 
+const { jump: sfxJump, die: sfxDie } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string, n = 7) {
   for (let i = 0; i < n; i++) {
     const angle = Math.random() * Math.PI * 2
@@ -136,6 +138,7 @@ function flipGravity() {
   if (state.value === 'over') return
   if (state.value === 'idle') { reset(); state.value = 'playing'; return }
   gravDir = -gravDir
+  sfxJump()
   // small burst on flip
   spawnParticles(PLAYER_X, py, '#a855f7', 5)
 }
@@ -187,18 +190,21 @@ function frame(ts: number) {
     if (py - pHalf < wTop - WALL_THICK + WALL_THICK || py - pHalf < wTop) {
       deathAnim = 1
       spawnParticles(PLAYER_X, py, '#a855f7', 12)
+      sfxDie()
       state.value = 'over'
       return
     }
     if (py + pHalf > wBot) {
       deathAnim = 1
       spawnParticles(PLAYER_X, py, '#a855f7', 12)
+      sfxDie()
       state.value = 'over'
       return
     }
     if (py - pHalf < 0 || py + pHalf > H) {
       deathAnim = 1
       spawnParticles(PLAYER_X, py, '#a855f7', 12)
+      sfxDie()
       state.value = 'over'
       return
     }

@@ -26,6 +26,8 @@ let scorePopups: ScorePopup[] = []
 let shakeTimer = 0
 let titlePulse = 0
 
+const { die: sfxDie, lose: sfxLose } = useGameSounds()
+
 function spawnInterval() { return Math.max(600, 1800 - elapsed * 0.3) }
 function asteroidSpeed()  { return 1.5 + elapsed * 0.0008 }
 
@@ -139,11 +141,12 @@ function frame(ts: number) {
         const dist = Math.hypot(a.x - shipX, a.y - SHIP_Y)
         if (dist < a.r + 14) {
           lives.value--
+          sfxDie()
           invincible = 2000
           shakeTimer = 8
           // Particle burst on hit
           spawnParticles(shipX, SHIP_Y, '#00d4ff', 8)
-          if (lives.value <= 0) { ctx.restore(); state.value = 'over'; return }
+          if (lives.value <= 0) { ctx.restore(); state.value = 'over'; sfxLose(); return }
           break
         }
       }

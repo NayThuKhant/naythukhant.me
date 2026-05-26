@@ -38,6 +38,8 @@ let deathAnim = 0
 let lastScore = 0
 let lastTs = 0
 
+const { die: sfxDie } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string, n = 7) {
   for (let i = 0; i < n; i++) {
     const angle = Math.random() * τ
@@ -230,6 +232,7 @@ function frame(ts: number) {
     if (shipY - 8 < topBot || shipY + 8 > botTop) {
       deathAnim = 1
       spawnParticles(SHIP_X, shipY, '#a855f7', 12)
+      sfxDie()
       state.value = 'over'
     }
   }

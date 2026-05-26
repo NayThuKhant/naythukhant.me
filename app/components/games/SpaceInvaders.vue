@@ -35,6 +35,8 @@ let scorePopups: ScorePopup[] = []
 let shakeTimer = 0
 let titlePulse = 0
 
+const { shoot: sfxShoot, pop: sfxPop, die: sfxDie, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 function buildInvaders(): Invader[] {
   const out: Invader[] = []
   for (let r = 0; r < ROWS; r++)
@@ -134,7 +136,7 @@ function frame(ts: number) {
 
   if (state.value === 'playing') {
     const aliveInv = invaders.filter(i => i.alive)
-    if (aliveInv.length === 0) { ctx.restore(); state.value = 'won'; return }
+    if (aliveInv.length === 0) { ctx.restore(); state.value = 'won'; sfxWin(); return }
 
     // Player movement
     if (keys.left)  playerX = Math.max(0, playerX - 5)
@@ -144,6 +146,7 @@ function frame(ts: number) {
     fireTimer += 16
     if (keys.fire && canFire && fireTimer > 280) {
       bullets.push({ x: playerX + PLAYER_W / 2, y: PLAYER_Y, speed: -9 })
+      sfxShoot()
       canFire = false; fireTimer = 0
     }
     if (!keys.fire) canFire = true
@@ -196,6 +199,7 @@ function frame(ts: number) {
           inv.alive = false; b.y = -999
           const pts = (ROWS - inv.row) * 10
           score.value += pts
+          sfxPop()
           invMoveInterval = Math.max(100, invMoveInterval - 8)
           // Particle burst + score popup
           spawnParticles(inv.x + INV_W / 2, inv.y + INV_H / 2, ROW_COLORS[inv.row]!)
@@ -209,8 +213,9 @@ function frame(ts: number) {
     for (const b of invBullets) {
       if (b.x > playerX - 4 && b.x < playerX + PLAYER_W + 4 && b.y > PLAYER_Y - 4 && b.y < PLAYER_Y + PLAYER_H + 4) {
         b.y = H + 999; lives.value--
+        sfxDie()
         shakeTimer = 8
-        if (lives.value <= 0) { ctx.restore(); state.value = 'over'; return }
+        if (lives.value <= 0) { ctx.restore(); state.value = 'over'; sfxLose(); return }
       }
     }
 

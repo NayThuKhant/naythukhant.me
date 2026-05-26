@@ -41,6 +41,8 @@ let playerTrail: { x: number; y: number }[] = []
 let deathAnim = 0        // 0 = inactive, 1..20 = frame counter
 let hitFlash  = 0        // white flash on player
 
+const { jump: sfxJump, score: sfxScore, die: sfxDie } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string, n = 7) {
   for (let i = 0; i < n; i++) {
     const angle = Math.random() * Math.PI * 2
@@ -124,6 +126,7 @@ function jump() {
   if (state.value === 'over') return
   if (state.value === 'idle') { reset(); state.value = 'playing'; return }
   pvy = JUMP_VY
+  sfxJump()
 }
 
 function frame(ts: number) {
@@ -179,6 +182,7 @@ function frame(ts: number) {
       if (!b.passed && b.x + BAR_W < PLAYER_X) {
         b.passed = true
         score.value++
+        sfxScore()
         speed = Math.min(6.5, speed + 0.08)
         // Spawn score popup near player
         spawnPopup(PLAYER_X + 20, py - 20, '+1')
@@ -194,6 +198,7 @@ function frame(ts: number) {
       // Death animation
       deathAnim = 1
       spawnParticles(PLAYER_X, py, '#00d4ff', 12)
+      sfxDie()
       state.value = 'over'
       return
     }
@@ -204,6 +209,7 @@ function frame(ts: number) {
         if (py - 8 < b.gapY || py + 8 > b.gapY + GAP_H) {
           deathAnim = 1
           spawnParticles(PLAYER_X, py, '#00d4ff', 12)
+          sfxDie()
           state.value = 'over'
           return
         }

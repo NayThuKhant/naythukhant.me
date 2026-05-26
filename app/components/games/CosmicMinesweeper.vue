@@ -47,6 +47,8 @@ let explosionX = W / 2
 let explosionY = H / 2
 let lastTs = 0
 
+const { click: sfxClick, pop: sfxPop, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string, n = 6) {
   for (let i = 0; i < n; i++) {
     const angle = Math.random() * τ
@@ -402,10 +404,13 @@ function onMouseDown(e: MouseEvent) {
     explosionY = cy
     explosionAnim = 1
     spawnParticles(cx, cy, '#ff4444', 10)
+    sfxPop()
     state.value = 'lost'
+    sfxLose()
     return
   }
 
+  sfxClick()
   flood(r, c)
 
   // Particles on reveal (non-mine)
@@ -416,6 +421,7 @@ function onMouseDown(e: MouseEvent) {
 
   if (checkWin()) {
     state.value = 'won'
+    sfxWin()
   }
 }
 

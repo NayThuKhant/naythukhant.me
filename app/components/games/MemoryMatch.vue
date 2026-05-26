@@ -27,6 +27,8 @@ const seconds = ref(0)
 const locked  = ref(false)
 let timer = 0
 
+const { click: sfxClick, correct: sfxCorrect, wrong: sfxWrong, win: sfxWin } = useGameSounds()
+
 function buildDeck(): Card[] {
   const planets = Object.values(PlanetName)
   const pairs = [...planets, ...planets]
@@ -49,6 +51,7 @@ function startGame() {
 
 function flip(card: Card) {
   if (locked.value || card.flipped || card.matched || state.value !== 'playing') return
+  sfxClick()
   card.flipped = true
   flips.value++
 
@@ -58,6 +61,7 @@ function flip(card: Card) {
   locked.value = true
   const [a, b] = [open[0]!, open[1]!]
   if (a.planet === b.planet) {
+    sfxCorrect()
     // Brief delay so user sees both cards face-up, then mark matched with pop animation
     setTimeout(() => {
       a.matched = b.matched = true
@@ -68,9 +72,11 @@ function flip(card: Card) {
       if (cards.value.every(c => c.matched)) {
         clearInterval(timer)
         state.value = 'won'
+        sfxWin()
       }
     }, 200)
   } else {
+    sfxWrong()
     setTimeout(() => {
       a.flipped = b.flipped = false
       locked.value = false

@@ -23,6 +23,8 @@ let scorePopups: ScorePopup[] = []
 let shakeTimer = 0
 let titlePulse = 0
 
+const { jump: sfxJump, score: sfxScore, die: sfxDie } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string) {
   for (let i = 0; i < 6; i++) {
     const angle = (τ / 6) * i + Math.random() * 0.5
@@ -47,6 +49,7 @@ function boost() {
   if (state.value === 'over') return
   if (state.value === 'idle') { startGame(); return }
   rvy = BOOST
+  sfxJump()
   // Boost particles trail
   spawnParticles(ROCKET_X, ry + 14, '#ff8800')
 }
@@ -95,7 +98,7 @@ function frame(ts: number) {
     for (const p of pipes) p.x -= pipeSpeed
     for (const p of pipes) {
       if (!p.passed && p.x + PIPE_W < ROCKET_X) {
-        p.passed = true; score.value++
+        p.passed = true; score.value++; sfxScore()
         pipeSpeed = Math.min(4.2, pipeSpeed + 0.06)
         // Score popup
         scorePopups.push({ x: ROCKET_X + 20, y: ry - 20, vy: -0.8, age: 0, maxAge: 40, text: '+1' })
@@ -108,6 +111,7 @@ function frame(ts: number) {
       shakeTimer = 8
       // Particle burst on death
       spawnParticles(ROCKET_X, ry, '#00d4ff')
+      sfxDie()
       ctx.restore(); state.value = 'over'; return
     }
     for (const p of pipes) {
@@ -115,6 +119,7 @@ function frame(ts: number) {
         if (ry - 10 < p.gapY || ry + 10 > p.gapY + GAP) {
           shakeTimer = 8
           spawnParticles(ROCKET_X, ry, '#a855f7')
+          sfxDie()
           ctx.restore(); state.value = 'over'; return
         }
       }

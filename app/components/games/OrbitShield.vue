@@ -48,6 +48,8 @@ let popups: ScorePopup[] = []
 let planetFlash = 0       // planet hit-flash frames
 let deathAnim = 0
 
+const { score: sfxScore, die: sfxDie, lose: sfxLose } = useGameSounds()
+
 const METEOR_COLORS = [
   { fill: '#f472b6', glow: '#f472b6' },
   { fill: '#f97316', glow: '#f97316' },
@@ -262,15 +264,18 @@ function frame(ts: number) {
         spawnPopup(m.x, m.y - 20, '+1')
         toRemove.push(i)
         score.value++
+        sfxScore()
       } else if (planetHit(m)) {
         // Planet hit flash + particles
         spawnParticles(m.x, m.y, m.fill, 6)
         planetFlash = 6
         toRemove.push(i)
+        sfxDie()
         lives.value = Math.max(0, lives.value - 1)
         if (lives.value <= 0) {
           deathAnim = 1
           state.value = 'over'
+          sfxLose()
         }
       } else {
         const dx = m.x - PLANET_X

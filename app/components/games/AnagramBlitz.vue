@@ -8,6 +8,8 @@ const WORDS = [
 ]
 
 const TIME_LIMIT = 60
+const { correct: sfxCorrect, wrong: sfxWrong, lose: sfxLose } = useGameSounds()
+
 const state   = ref<'idle' | 'playing' | 'over'>('idle')
 const scrambled = ref('')
 const answer  = ref('')
@@ -59,6 +61,7 @@ function startGame() {
 
 function endGame() {
   clearInterval(timer)
+  sfxLose()
   state.value = 'over'
 }
 
@@ -66,10 +69,12 @@ function submit() {
   if (state.value !== 'playing') return
   if (input.value.trim().toUpperCase() === answer.value) {
     score.value += 10
+    sfxCorrect()
     feedback.value = 'correct'
     setTimeout(() => { feedback.value = ''; nextWord() }, 400)
   } else {
     score.value = Math.max(0, score.value - 1)
+    sfxWrong()
     feedback.value = 'wrong'
     setTimeout(() => { feedback.value = '' }, 400)
     input.value = ''

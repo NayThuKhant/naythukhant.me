@@ -30,6 +30,8 @@ let particles: Particle[] = []
 let scorePopups: ScorePopup[] = []
 let titlePulse = 0
 
+const { pop: sfxPop, miss: sfxMiss, lose: sfxLose } = useGameSounds()
+
 function newMeteor(): Meteor {
   const c = COLORS[Math.floor(Math.random() * COLORS.length)]!
   const r = 16 + Math.random() * 16
@@ -83,8 +85,9 @@ function frame(ts: number) {
     const missed = meteors.filter(m => m.y - m.r > H)
     if (missed.length > 0) {
       meteors = meteors.filter(m => m.y - m.r <= H)
+      sfxMiss()
       lives.value = Math.max(0, lives.value - missed.length)
-      if (lives.value <= 0) state.value = 'over'
+      if (lives.value <= 0) { state.value = 'over'; sfxLose() }
     }
 
     // Update particles
@@ -173,6 +176,7 @@ function hitTest(clientX: number, clientY: number) {
   if (i >= 0) {
     const m = meteors[i]!
     score.value += m.pts
+    sfxPop()
     speedMult = Math.min(2.5, speedMult + 0.03)
     // Particle burst + score popup on hit
     spawnParticles(m.x, m.y, m.glow, m.r)

@@ -49,6 +49,8 @@ let raf           = 0
 let aimLeft       = false
 let aimRight      = false
 
+const { shoot: sfxShoot, pop: sfxPop, levelUp: sfxLevelUp, lose: sfxLose } = useGameSounds()
+
 // ── Grid helpers ──────────────────────────────────────────────────────────────
 function colsForRow(r: number) { return r % 2 === 0 ? COLS_EVEN : COLS_ODD }
 function bubbleXY(r: number, c: number): [number, number] {
@@ -163,6 +165,7 @@ function spawnBurst(x: number, y: number, color: BColor, n = 10) {
 
 function shoot() {
   if (projectile || state.value !== 'playing') return
+  sfxShoot()
   projectile = {
     x: EMITTER_X,
     y: EMITTER_Y,
@@ -186,6 +189,7 @@ function placeBubble(px: number, py: number, color: BColor) {
   // Check match
   const group = floodFill(r, c)
   if (group.length >= 3) {
+    sfxPop()
     for (const [gr, gc] of group) {
       const [bx, by] = bubbleXY(gr, gc)
       spawnBurst(bx, by, color, 6)
@@ -206,6 +210,7 @@ function placeBubble(px: number, py: number, color: BColor) {
 
   // Level up when board cleared
   if (!hasAnyBubble()) {
+    sfxLevelUp()
     level.value++
     initGrid(5 + Math.min(level.value, 5))
     shotCount = 0
@@ -216,7 +221,7 @@ function placeBubble(px: number, py: number, color: BColor) {
     for (let c2 = 0; c2 < colsForRow(r2); c2++)
       if (grid[r2]?.[c2]) {
         const [, by] = bubbleXY(r2, c2)
-        if (by >= DANGER_Y) { state.value = 'over'; return }
+        if (by >= DANGER_Y) { state.value = 'over'; sfxLose(); return }
       }
 }
 

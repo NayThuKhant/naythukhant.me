@@ -35,6 +35,8 @@ let scorePopups: ScorePopup[] = []
 let shakeTimer = 0
 let titlePulse = 0
 
+const { bounce: sfxBounce, pop: sfxPop, die: sfxDie, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 function buildBricks(): Brick[] {
   const out: Brick[] = []
   for (let r = 0; r < BRICK_ROWS; r++)
@@ -107,15 +109,16 @@ function frame(ts: number) {
     bx += vx; by += vy
 
     // Wall bounces
-    if (bx - BALL_R < 0)  { bx = BALL_R;      vx = Math.abs(vx) }
-    if (bx + BALL_R > W)  { bx = W - BALL_R;  vx = -Math.abs(vx) }
-    if (by - BALL_R < 0)  { by = BALL_R;       vy = Math.abs(vy) }
+    if (bx - BALL_R < 0)  { bx = BALL_R;      vx = Math.abs(vx);  sfxBounce() }
+    if (bx + BALL_R > W)  { bx = W - BALL_R;  vx = -Math.abs(vx); sfxBounce() }
+    if (by - BALL_R < 0)  { by = BALL_R;       vy = Math.abs(vy);  sfxBounce() }
 
     // Floor = lose life
     if (by - BALL_R > H) {
       lives.value--
+      sfxDie()
       shakeTimer = 8
-      if (lives.value <= 0) { ctx.restore(); state.value = 'over'; return }
+      if (lives.value <= 0) { ctx.restore(); state.value = 'over'; sfxLose(); return }
       bx = padX + PAD_W / 2; by = PAD_Y - BALL_R - 2
       const a = -Math.PI / 2 + (Math.random() - 0.5) * (Math.PI / 3)
       vx = Math.cos(a) * 4.2; vy = Math.sin(a) * 4.2
@@ -124,6 +127,7 @@ function frame(ts: number) {
     // Paddle bounce
     if (by + BALL_R >= PAD_Y && by + BALL_R <= PAD_Y + PAD_H &&
         bx >= padX && bx <= padX + PAD_W && vy > 0) {
+      sfxBounce()
       const hit = (bx - (padX + PAD_W / 2)) / (PAD_W / 2)
       const angle = hit * (Math.PI / 3)
       const speed2 = Math.min(7, Math.hypot(vx, vy) + 0.08)
@@ -141,6 +145,7 @@ function frame(ts: number) {
         b.alive = false
         const pts = (BRICK_ROWS - b.row) * 10
         score.value += pts
+        sfxPop()
         const overlapL = bx + BALL_R - b.x
         const overlapR = b.x + BRICK_W - (bx - BALL_R)
         const overlapT = by + BALL_R - b.y
@@ -157,7 +162,7 @@ function frame(ts: number) {
         break
       }
     }
-    if (remaining === 0) { ctx.restore(); state.value = 'won'; return }
+    if (remaining === 0) { ctx.restore(); state.value = 'won'; sfxWin(); return }
 
     // Update flash
     for (const b of bricks) { if (b.flashTimer > 0) b.flashTimer-- }

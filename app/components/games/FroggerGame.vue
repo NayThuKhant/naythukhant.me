@@ -2,6 +2,8 @@
 const W = 480, H = 520
 const ROWS = 13, CELL = H / ROWS  // ~40px per row
 
+const { jump: sfxJump, die: sfxDie, score: sfxScore, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 const state = ref<'idle' | 'playing' | 'over' | 'won'>('idle')
 const lives = ref(3)
 const score = ref(0)
@@ -75,6 +77,7 @@ function moveFrog(dr: number, dc: number) {
   const newX = Math.max(0, Math.min(W - CELL, frog.x + dc * CELL))
   frog.row = newRow
   frog.x = newX
+  sfxJump()
   if (dr === -1) score.value += 10
 }
 
@@ -117,8 +120,9 @@ function checkCollisions() {
       h[slot] = true
       homeFilled.value = h
       score.value += 100
+      sfxScore()
       resetFrog()
-      if (h.every(Boolean)) { state.value = 'won'; cancelAnimationFrame(raf) }
+      if (h.every(Boolean)) { sfxWin(); state.value = 'won'; cancelAnimationFrame(raf) }
     } else {
       die()
     }
@@ -127,8 +131,9 @@ function checkCollisions() {
 
 function die() {
   lives.value--
+  sfxDie()
   resetFrog()
-  if (lives.value <= 0) { state.value = 'over'; cancelAnimationFrame(raf) }
+  if (lives.value <= 0) { sfxLose(); state.value = 'over'; cancelAnimationFrame(raf) }
 }
 
 function draw(ts: number) {

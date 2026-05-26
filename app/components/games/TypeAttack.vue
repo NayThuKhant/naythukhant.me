@@ -52,6 +52,8 @@ let destroyed  = 0
 let ctx2d:     CanvasRenderingContext2D | null = null
 let raf        = 0
 
+const { click: sfxClick, score: sfxScore, die: sfxDie, lose: sfxLose } = useGameSounds()
+
 function pickWord(): string {
   // Blend tiers so difficulty ramps smoothly
   const lv = level.value
@@ -98,6 +100,7 @@ function destroyWord(w: FallingWord) {
   destroyed++
   typed.value++
   score.value += 10 + w.text.length * 4 + (level.value - 1) * 6
+  sfxScore()
   burst(w.x, w.y, '#00ff88', 14)
   if (destroyed % LEVEL_UP_AT === 0) {
     level.value++
@@ -138,6 +141,7 @@ function onKey(e: KeyboardEvent) {
     const w = words.find(w => w.id === activeId && !w.dying)
     if (w) {
       if (w.text[w.progress] === ch) {
+        sfxClick()
         w.progress++
         if (w.progress >= w.text.length) destroyWord(w)
       } else {
@@ -204,8 +208,9 @@ function frame() {
         w.missed = true; w.dying = true; w.dyAge = w.dyMax
         if (w.active) activeId = null
         burst(w.x, DANGER_Y, '#ef4444', 8)
+        sfxDie()
         lives.value--
-        if (lives.value <= 0) state.value = 'over'
+        if (lives.value <= 0) { state.value = 'over'; sfxLose() }
       }
     }
     words = words.filter(w => !(w.dying && w.dyAge >= w.dyMax))

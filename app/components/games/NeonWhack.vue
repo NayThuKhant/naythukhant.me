@@ -41,6 +41,8 @@ let activeHoles = new Set<number>()
 let particles: Particle[] = []
 let popups: ScorePopup[] = []
 
+const { pop: sfxPop, miss: sfxMiss, lose: sfxLose } = useGameSounds()
+
 function holeKey(col: number, row: number) { return row * COLS + col }
 
 function spawnParticles(x: number, y: number, color: string, n = 7) {
@@ -228,6 +230,7 @@ function frame(ts: number) {
       timeLeft.value = Math.max(0, timeLeft.value - 1)
       if (timeLeft.value <= 0) {
         state.value = 'over'
+        sfxLose()
         return
       }
     }
@@ -249,9 +252,11 @@ function frame(ts: number) {
           continue
         }
       } else {
+        const wasAlive = a.life > 0
         a.life -= dt
         a.rising = Math.min(1, a.rising + dt / 200)
         if (a.life <= 0) {
+          if (wasAlive) sfxMiss()
           a.rising = Math.max(0, a.rising - dt / 150)
           if (a.rising <= 0) {
             activeHoles.delete(holeKey(a.col, a.row))
@@ -334,6 +339,7 @@ function hitTest(clientX: number, clientY: number) {
       a.flashFrames = 8
       a.life = 0
       score.value++
+      sfxPop()
       // Particle burst + popup on whack
       spawnParticles(cx, acy, '#00ff88', 8)
       spawnPopup(cx, acy - alienR - 10, '+1')

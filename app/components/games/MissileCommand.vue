@@ -123,132 +123,134 @@ function draw() {
     }
   }
 
-  spawnTimer++
-  if (spawnTimer >= spawnInterval) {
-    spawnMissile()
-    spawnTimer = 0
-    if (missiles.length > wave.value * 5) spawnInterval = Math.max(60, spawnInterval - 5)
-  }
-
-  // Update missiles
-  for (const m of missiles) {
-    if (!m.alive) continue
-    const dx = m.tx - m.x, dy = m.ty - m.y
-    const dist = Math.hypot(dx, dy)
-    if (dist < m.speed) {
-      m.x = m.tx; m.y = m.ty; m.alive = false
-      // Hit city or base
-      for (const city of cities) {
-        if (city.alive && Math.abs(city.x - m.tx) < 20) { city.alive = false; break }
-      }
-      explosions.push({ x: m.tx, y: m.ty, radius: 0, maxRadius: 30, growing: true, color: '#ff4444' })
-    } else {
-      m.x += (dx / dist) * m.speed
-      m.y += (dy / dist) * m.speed
+  if (state.value === 'playing') {
+    spawnTimer++
+    if (spawnTimer >= spawnInterval) {
+      spawnMissile()
+      spawnTimer = 0
+      if (missiles.length > wave.value * 5) spawnInterval = Math.max(60, spawnInterval - 5)
     }
 
-    // Draw missile trail
-    ctx.strokeStyle = '#ff4444'
-    ctx.lineWidth = 1.5
-    ctx.globalAlpha = 0.6
-    ctx.beginPath(); ctx.moveTo(m.x, m.y - 20); ctx.lineTo(m.x, m.y); ctx.stroke()
-    ctx.globalAlpha = 1
-    ctx.fillStyle = '#ff6666'
-    ctx.shadowColor = '#ff4444'; ctx.shadowBlur = 6
-    ctx.beginPath(); ctx.arc(m.x, m.y, 3, 0, τ); ctx.fill()
-    ctx.shadowBlur = 0
+    // Update missiles
+    for (const m of missiles) {
+      if (!m.alive) continue
+      const dx = m.tx - m.x, dy = m.ty - m.y
+      const dist = Math.hypot(dx, dy)
+      if (dist < m.speed) {
+        m.x = m.tx; m.y = m.ty; m.alive = false
+        for (const city of cities) {
+          if (city.alive && Math.abs(city.x - m.tx) < 20) { city.alive = false; break }
+        }
+        explosions.push({ x: m.tx, y: m.ty, radius: 0, maxRadius: 30, growing: true, color: '#ff4444' })
+      } else {
+        m.x += (dx / dist) * m.speed
+        m.y += (dy / dist) * m.speed
+      }
+    }
+
+    // Update interceptors
+    for (const icp of interceptors) {
+      if (icp.exploding) {
+        icp.radius += 2.5
+        for (const m of missiles) {
+          if (!m.alive) continue
+          if (Math.hypot(m.x - icp.tx, m.y - icp.ty) < icp.radius) {
+            m.alive = false; score.value += 25
+            explosions.push({ x: m.x, y: m.y, radius: 0, maxRadius: 15, growing: true, color: '#00d4ff' })
+          }
+        }
+      } else {
+        const dx = icp.tx - icp.x, dy = icp.ty - icp.y
+        const dist = Math.hypot(dx, dy)
+        if (dist < icp.speed) { icp.x = icp.tx; icp.y = icp.ty; icp.exploding = true }
+        else { icp.x += (dx / dist) * icp.speed; icp.y += (dy / dist) * icp.speed }
+      }
+    }
+
+    // Update explosions
+    for (const exp of explosions) {
+      if (exp.growing) { exp.radius += 2; if (exp.radius >= exp.maxRadius) exp.growing = false }
+      else exp.radius -= 1.5
+    }
+
+    missiles = missiles.filter(m => m.alive)
+    interceptors = interceptors.filter(i => i.radius < i.maxRadius)
+    explosions = explosions.filter(e => e.radius > 0)
+
+    // Check wave clear
+    if (missiles.length === 0 && interceptors.length === 0 && spawnTimer === 0) {
+      const count = cities.filter(c => c.alive).length
+      if (wave.value >= 5) {
+        score.value += count * 100
+        state.value = count > 0 ? 'won' : 'over'
+        return
+      } else if (count > 0) {
+        wave.value++
+        spawnInterval = Math.max(50, 120 - wave.value * 15)
+        for (const base of bases) base.ammo = 15
+      }
+    }
+
+    // Check game over
+    if (!cities.some(c => c.alive)) { state.value = 'over'; return }
   }
 
-  // Update interceptors
+  // Draw missiles
+  for (const m of missiles) {
+    ctx.strokeStyle = '#ff4444'; ctx.lineWidth = 1.5; ctx.globalAlpha = 0.6
+    ctx.beginPath(); ctx.moveTo(m.x, m.y - 20); ctx.lineTo(m.x, m.y); ctx.stroke()
+    ctx.globalAlpha = 1
+    ctx.fillStyle = '#ff6666'; ctx.shadowColor = '#ff4444'; ctx.shadowBlur = 6
+    ctx.beginPath(); ctx.arc(m.x, m.y, 3, 0, τ); ctx.fill(); ctx.shadowBlur = 0
+  }
+
+  // Draw interceptors
   for (const icp of interceptors) {
     if (icp.exploding) {
-      icp.radius += 2.5
-      ctx.strokeStyle = '#00d4ff'
-      ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 15
-      ctx.lineWidth = 2
+      ctx.strokeStyle = '#00d4ff'; ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 15; ctx.lineWidth = 2
       ctx.globalAlpha = Math.max(0, 1 - icp.radius / icp.maxRadius)
       ctx.beginPath(); ctx.arc(icp.tx, icp.ty, icp.radius, 0, τ); ctx.stroke()
       ctx.globalAlpha = 1; ctx.shadowBlur = 0
-
-      // Destroy missiles in radius
-      for (const m of missiles) {
-        if (!m.alive) continue
-        if (Math.hypot(m.x - icp.tx, m.y - icp.ty) < icp.radius) {
-          m.alive = false
-          score.value += 25
-          explosions.push({ x: m.x, y: m.y, radius: 0, maxRadius: 15, growing: true, color: '#00d4ff' })
-        }
-      }
     } else {
-      const dx = icp.tx - icp.x, dy = icp.ty - icp.y
-      const dist = Math.hypot(dx, dy)
-      if (dist < icp.speed) { icp.x = icp.tx; icp.y = icp.ty; icp.exploding = true }
-      else { icp.x += (dx / dist) * icp.speed; icp.y += (dy / dist) * icp.speed }
-      ctx.strokeStyle = '#00d4ff'
-      ctx.lineWidth = 1; ctx.globalAlpha = 0.8
+      ctx.strokeStyle = '#00d4ff'; ctx.lineWidth = 1; ctx.globalAlpha = 0.8
       ctx.beginPath(); ctx.moveTo(icp.x, icp.y + 10); ctx.lineTo(icp.x, icp.y); ctx.stroke()
       ctx.globalAlpha = 1
       ctx.fillStyle = '#00d4ff'; ctx.shadowColor = '#00d4ff'; ctx.shadowBlur = 8
-      ctx.beginPath(); ctx.arc(icp.x, icp.y, 3, 0, τ); ctx.fill()
-      ctx.shadowBlur = 0
+      ctx.beginPath(); ctx.arc(icp.x, icp.y, 3, 0, τ); ctx.fill(); ctx.shadowBlur = 0
     }
   }
 
-  // Update explosions
+  // Draw explosions
   for (const exp of explosions) {
-    if (exp.growing) { exp.radius += 2; if (exp.radius >= exp.maxRadius) exp.growing = false }
-    else exp.radius -= 1.5
     ctx.strokeStyle = exp.color; ctx.shadowColor = exp.color; ctx.shadowBlur = 10
-    ctx.globalAlpha = exp.radius / exp.maxRadius * 0.8
-    ctx.lineWidth = 2
+    ctx.globalAlpha = exp.radius / exp.maxRadius * 0.8; ctx.lineWidth = 2
     ctx.beginPath(); ctx.arc(exp.x, exp.y, exp.radius, 0, τ); ctx.stroke()
     ctx.globalAlpha = 1; ctx.shadowBlur = 0
   }
 
-  missiles = missiles.filter(m => m.alive)
-  interceptors = interceptors.filter(i => i.radius < i.maxRadius)
-  explosions = explosions.filter(e => e.radius > 0)
-
-  // Check wave clear
-  if (missiles.length === 0 && spawnTimer < 10 && wave.value > 0) {
-    const count = cities.filter(c => c.alive).length
-    if (count > 0 && wave.value >= 5) {
-      score.value += count * 100
-      state.value = 'won'; cancelAnimationFrame(raf); return
-    } else if (wave.value < 5 && spawnTimer === 0 && interceptors.length === 0) {
-      wave.value++
-      spawnInterval = Math.max(50, 120 - wave.value * 15)
-      for (const base of bases) base.ammo = 15
-    }
+  // Wave info
+  if (state.value === 'playing') {
+    ctx.fillStyle = 'rgba(255,255,255,0.5)'
+    ctx.font = "12px 'JetBrains Mono', monospace"; ctx.textAlign = 'left'
+    ctx.fillText(`Wave ${wave.value}/5  Score: ${score.value}`, 10, 20)
   }
 
-  // Check game over
-  if (!cities.some(c => c.alive)) { state.value = 'over'; cancelAnimationFrame(raf); return }
-
-  // Wave info
-  ctx.fillStyle = 'rgba(255,255,255,0.5)'
-  ctx.font = "12px 'JetBrains Mono', monospace"
-  ctx.textAlign = 'left'
-  ctx.fillText(`Wave ${wave.value}/5  Score: ${score.value}`, 10, 20)
-
   if (state.value === 'idle') {
-    ctx.fillStyle = 'rgba(3,7,18,0.87)'
-    ctx.fillRect(0, 0, W, H)
+    ctx.fillStyle = 'rgba(3,7,18,0.87)'; ctx.fillRect(0, 0, W, H)
     ctx.fillStyle = '#f472b6'; ctx.shadowColor = '#f472b6'; ctx.shadowBlur = 20
     ctx.font = "bold 26px 'Space Grotesk', sans-serif"; ctx.textAlign = 'center'
-    ctx.fillText('MISSILE COMMAND', W/2, H/2 - 24)
-    ctx.shadowBlur = 0
+    ctx.fillText('MISSILE COMMAND', W/2, H/2 - 24); ctx.shadowBlur = 0
     ctx.fillStyle = 'rgba(200,220,255,0.5)'
     ctx.font = "12px 'JetBrains Mono', monospace"
     ctx.fillText('Click to launch interceptors', W/2, H/2 + 12)
     ctx.fillText('Protect your cities across 5 waves', W/2, H/2 + 30)
   }
 
-  if (state.value === 'playing') raf = requestAnimationFrame(draw)
+  raf = requestAnimationFrame(draw)
 }
 
 function onClick(e: MouseEvent) {
-  if (state.value === 'idle') { initGame(); state.value = 'playing'; return }
+  if (state.value === 'idle') { initGame(); state.value = 'playing'; raf = requestAnimationFrame(draw); return }
   if (state.value !== 'playing') return
   const canvas = canvasEl.value!
   const rect = canvas.getBoundingClientRect()

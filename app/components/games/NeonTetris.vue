@@ -34,6 +34,8 @@ let scorePopups: ScorePopup[] = []
 let shakeTimer = 0
 let titlePulse = 0
 
+const { move: sfxMove, drop: sfxDrop, levelUp: sfxLevelUp, lose: sfxLose } = useGameSounds()
+
 function dropInterval() { return Math.max(100, 800 - (level.value - 1) * 70) }
 
 function newGrid(): Grid {
@@ -69,6 +71,7 @@ function spawnParticles(x: number, y: number, color: string) {
 
 function lock() {
   if (!piece) return
+  sfxDrop()
   // Spawn particles for each locked cell
   for (const [cx, cy] of piece.cells) {
     const ny = cy + piece.y
@@ -95,7 +98,9 @@ function lock() {
     const pts = ([0, 100, 300, 500, 800][cleared] ?? 800) * level.value
     score.value += pts
     lines.value += cleared
+    const prevLevel = level.value
     level.value = Math.floor(lines.value / 10) + 1
+    if (level.value > prevLevel) sfxLevelUp()
     // Score popup in the middle
     scorePopups.push({ x: W / 2, y: H / 2, vy: -0.9, age: 0, maxAge: 45, text: `+${pts}` })
     shakeTimer = 5
@@ -105,6 +110,7 @@ function lock() {
   nextPiece = randomPiece()
   if (!valid(piece.cells, piece.x, piece.y)) {
     state.value = 'over'
+    sfxLose()
     piece = null
   }
 }
@@ -251,8 +257,8 @@ function onKey(e: KeyboardEvent) {
   if (state.value === 'idle') { start(); return }
   if (state.value !== 'playing') return
   if (!piece) return
-  if (e.key === 'ArrowLeft'  && valid(piece.cells, piece.x - 1, piece.y)) piece.x--
-  if (e.key === 'ArrowRight' && valid(piece.cells, piece.x + 1, piece.y)) piece.x++
+  if (e.key === 'ArrowLeft'  && valid(piece.cells, piece.x - 1, piece.y)) { piece.x--; sfxMove() }
+  if (e.key === 'ArrowRight' && valid(piece.cells, piece.x + 1, piece.y)) { piece.x++; sfxMove() }
   if (e.key === 'ArrowDown') {
     if (valid(piece.cells, piece.x, piece.y + 1)) { piece.y++; lastDrop = performance.now() }
     else lock()

@@ -12,6 +12,9 @@ const CELL = 44
 const COLORS = { wall: '#1e293b', floor: '#070a13', goal: '#0f2a1a', box: '#78350f', boxGoal: '#00ff88', player: '#00d4ff' }
 
 type Pos = [number, number]
+
+const { move: sfxMove, drop: sfxDrop, levelUp: sfxLevelUp, win: sfxWin } = useGameSounds()
+
 const state    = ref<'idle' | 'playing' | 'won'>('idle')
 const levelIdx = ref(0)
 const grid     = ref<string[][]>([])
@@ -77,9 +80,11 @@ function move(dr: number, dc: number) {
     g[br]![bc] = boxPlaces
     g[nr]![nc] = isGoal(dest) ? '+' : '@'
     g[pr]![pc] = playerLeaves
+    sfxDrop()
   } else {
     g[nr]![nc] = isGoal(dest) ? '+' : '@'
     g[pr]![pc] = playerLeaves
+    sfxMove()
   }
 
   grid.value = g
@@ -91,8 +96,10 @@ function move(dr: number, dc: number) {
     const next = levelIdx.value + 1
     if (next >= LEVELS.length) {
       score.value = totalMoves.value
+      sfxWin()
       state.value = 'won'
     } else {
+      sfxLevelUp()
       levelIdx.value = next
       setTimeout(() => loadLevel(next), 600)
     }

@@ -44,6 +44,8 @@ let popups: ScorePopup[] = []
 let shipFlash = 0    // hit flash on ship (bomb catch)
 let deathAnim = 0
 
+const { score: sfxScore, miss: sfxMiss, lose: sfxLose } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string, n = 7) {
   for (let i = 0; i < n; i++) {
     const angle = Math.random() * τ
@@ -251,17 +253,20 @@ function frame(ts: number) {
         if (obj.isBomb) {
           // Bomb caught — red particles, ship flash
           spawnParticles(obj.x, obj.y, '#f472b6', 8)
+          sfxMiss()
           shipFlash = 5
           lives.value = Math.max(0, lives.value - 1)
           if (lives.value <= 0) {
             deathAnim = 1
             state.value = 'over'
+            sfxLose()
           }
         } else {
           // Star caught — green particles, popup
           spawnParticles(obj.x, obj.y, '#00ff88', 7)
           spawnPopup(obj.x, H - SHIP_H - 30, '+1')
           score.value++
+          sfxScore()
           speedMult = Math.min(2.5, speedMult + 0.025)
         }
       } else if (obj.y - obj.r > H + 10) {

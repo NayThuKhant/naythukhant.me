@@ -134,66 +134,61 @@ function draw() {
     }
   }
 
-  // Move pac
-  pacMoveTimer++
-  if (pacMoveTimer >= 5) {
-    pacMoveTimer = 0
-    // Try next direction
-    if (canMove(maze, pac.row, pac.col, pac.nextDir[0], pac.nextDir[1])) pac.dir = pac.nextDir
-    // Move
-    if (canMove(maze, pac.row, pac.col, pac.dir[0], pac.dir[1])) {
-      pac.row += pac.dir[0]; pac.col += pac.dir[1]
-      // Wrap tunnel (row 10)
-      if (pac.col < 0) pac.col = COLS - 1
-      if (pac.col >= COLS) pac.col = 0
-
-      const cell = maze[pac.row]![pac.col]
-      if (cell === 1) { maze[pac.row]![pac.col] = 3; score.value += 10; eatenDots++ }
-      if (cell === 2) {
-        maze[pac.row]![pac.col] = 3; score.value += 50; eatenDots++
-        for (const g of ghosts) { g.scared = true; g.scaredTimer = 150 }
-        powerTimer = 150
-      }
-    }
-  }
-
-  // Move ghosts
-  ghostMoveTimer++
-  if (ghostMoveTimer >= 10) {
-    ghostMoveTimer = 0
-    for (const g of ghosts) {
-      if (g.scared) { g.scaredTimer--; if (g.scaredTimer <= 0) g.scared = false }
-      // Move ghost
-      const useRandom = Math.random() < 0.25 || g.scared
-      if (useRandom) {
-        const DIRS: [number,number][] = [[0,1],[0,-1],[1,0],[-1,0]]
-        const valid = DIRS.filter(([dr,dc]) => canMove(maze, g.row, g.col, dr, dc) && !(dr === -g.dir[0] && dc === -g.dir[1]))
-        if (valid.length) g.dir = valid[Math.floor(Math.random() * valid.length)]!
-      } else {
-        g.dir = bfsNextDir(maze, g.row, g.col, pac.row, pac.col)
-      }
-      if (canMove(maze, g.row, g.col, g.dir[0], g.dir[1])) {
-        g.row += g.dir[0]; g.col += g.dir[1]
-        if (g.col < 0) g.col = COLS - 1
-        if (g.col >= COLS) g.col = 0
-      }
-
-      // Collision with pac
-      if (g.row === pac.row && g.col === pac.col) {
-        if (g.scared) {
-          g.scared = false; score.value += 200
-          g.row = 10; g.col = 10
-        } else {
-          lives.value--
-          if (lives.value <= 0) { state.value = 'over'; cancelAnimationFrame(raf); return }
-          pac.col = 10; pac.row = 16; pac.dir = [1,0]
-          for (const gh of ghosts) { gh.row = 10; gh.col = 10; gh.scared = false }
+  if (state.value === 'playing') {
+    // Move pac
+    pacMoveTimer++
+    if (pacMoveTimer >= 5) {
+      pacMoveTimer = 0
+      if (canMove(maze, pac.row, pac.col, pac.nextDir[0], pac.nextDir[1])) pac.dir = pac.nextDir
+      if (canMove(maze, pac.row, pac.col, pac.dir[0], pac.dir[1])) {
+        pac.row += pac.dir[0]; pac.col += pac.dir[1]
+        if (pac.col < 0) pac.col = COLS - 1
+        if (pac.col >= COLS) pac.col = 0
+        const cell = maze[pac.row]![pac.col]
+        if (cell === 1) { maze[pac.row]![pac.col] = 3; score.value += 10; eatenDots++ }
+        if (cell === 2) {
+          maze[pac.row]![pac.col] = 3; score.value += 50; eatenDots++
+          for (const g of ghosts) { g.scared = true; g.scaredTimer = 150 }
+          powerTimer = 150
         }
       }
     }
-  }
 
-  if (eatenDots >= totalDots) { state.value = 'won'; cancelAnimationFrame(raf); return }
+    // Move ghosts
+    ghostMoveTimer++
+    if (ghostMoveTimer >= 10) {
+      ghostMoveTimer = 0
+      for (const g of ghosts) {
+        if (g.scared) { g.scaredTimer--; if (g.scaredTimer <= 0) g.scared = false }
+        const useRandom = Math.random() < 0.25 || g.scared
+        if (useRandom) {
+          const DIRS: [number,number][] = [[0,1],[0,-1],[1,0],[-1,0]]
+          const valid = DIRS.filter(([dr,dc]) => canMove(maze, g.row, g.col, dr, dc) && !(dr === -g.dir[0] && dc === -g.dir[1]))
+          if (valid.length) g.dir = valid[Math.floor(Math.random() * valid.length)]!
+        } else {
+          g.dir = bfsNextDir(maze, g.row, g.col, pac.row, pac.col)
+        }
+        if (canMove(maze, g.row, g.col, g.dir[0], g.dir[1])) {
+          g.row += g.dir[0]; g.col += g.dir[1]
+          if (g.col < 0) g.col = COLS - 1
+          if (g.col >= COLS) g.col = 0
+        }
+        if (g.row === pac.row && g.col === pac.col) {
+          if (g.scared) {
+            g.scared = false; score.value += 200
+            g.row = 10; g.col = 10
+          } else {
+            lives.value--
+            if (lives.value <= 0) { state.value = 'over'; return }
+            pac.col = 10; pac.row = 16; pac.dir = [1,0]
+            for (const gh of ghosts) { gh.row = 10; gh.col = 10; gh.scared = false }
+          }
+        }
+      }
+    }
+
+    if (eatenDots >= totalDots) { state.value = 'won'; return }
+  }
 
   // Draw ghosts
   for (const g of ghosts) {
@@ -255,7 +250,7 @@ function draw() {
     ctx.fillText('Click to start', W/2, H/2 + 32)
   }
 
-  if (state.value === 'playing') raf = requestAnimationFrame(draw)
+  if (state.value === 'idle' || state.value === 'playing') raf = requestAnimationFrame(draw)
 }
 
 function onKey(e: KeyboardEvent) {

@@ -11,6 +11,8 @@ const DIRS: Dir[] = [[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]
 
 interface PlacedWord { word: string; r: number; c: number; dr: number; dc: number }
 
+const { wordFound: sfxWordFound, win: sfxWin } = useGameSounds()
+
 const state     = ref<'idle' | 'playing' | 'won'>('idle')
 const grid      = ref<string[][]>([])
 const words     = ref<string[]>([])
@@ -130,9 +132,11 @@ function endDrag() {
 
   if (words.value.includes(word) && !found.value.has(word)) {
     found.value = new Set([...found.value, word])
+    sfxWordFound()
     if (found.value.size === words.value.length) {
       clearInterval(timer)
       score.value = seconds.value
+      sfxWin()
       state.value = 'won'
     }
   }
@@ -166,6 +170,13 @@ onUnmounted(() => clearInterval(timer))
         Find all hidden space words. Click and drag to select a word.
       </p>
       <button class="btn-neon-blue mt-2" @click="startGame">START GAME</button>
+    </div>
+
+    <div v-if="state === 'playing'" class="flex justify-center">
+      <button
+        class="font-mono text-[10px] tracking-widest uppercase text-slate-600 hover:text-neon-blue transition-colors border border-white/8 hover:border-neon-blue/30 rounded px-3 py-1"
+        @click="startGame"
+      >NEW PUZZLE</button>
     </div>
 
     <div v-else class="relative flex gap-6 items-start">

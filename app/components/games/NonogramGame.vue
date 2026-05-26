@@ -81,6 +81,8 @@ function getClues(lines: number[][]): number[][] {
   })
 }
 
+const { click: sfxClick, win: sfxWin } = useGameSounds()
+
 const SIZE = 8
 const state    = ref<'idle' | 'playing' | 'won'>('idle')
 const grid     = ref<number[][]>([])   // 0=empty, 1=filled, -1=crossed
@@ -109,6 +111,7 @@ function clickCell(r: number, c: number) {
   g[r]![c] = g[r]![c] === 1 ? 0 : 1
   grid.value = g
   moves.value++
+  sfxClick()
   checkWin()
 }
 
@@ -129,6 +132,7 @@ function checkWin() {
     }
   }
   score.value = moves.value
+  sfxWin()
   state.value = 'won'
 }
 

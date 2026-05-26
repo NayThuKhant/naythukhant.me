@@ -1,5 +1,7 @@
 <script setup lang="ts">
 const SIZE = 4
+const { move: sfxMove, win: sfxWin } = useGameSounds()
+
 const state   = ref<'idle' | 'playing' | 'won'>('idle')
 const tiles   = ref<number[]>([])
 const moves   = ref(0)
@@ -52,9 +54,11 @@ function clickTile(idx: number) {
   ;[t[idx], t[blank]] = [t[blank]!, t[idx]!]
   tiles.value = t
   moves.value++
+  sfxMove()
   if (solved(t)) {
     clearInterval(timer)
     score.value = moves.value
+    sfxWin()
     state.value = 'won'
   }
 }

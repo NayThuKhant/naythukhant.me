@@ -5,6 +5,8 @@ const MAX_ROWS = 10
 
 type Guess = { code: number[]; blacks: number; whites: number }
 
+const { click: sfxClick, correct: sfxCorrect, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 const state    = ref<'idle' | 'playing' | 'won' | 'over'>('idle')
 const secret   = ref<number[]>([])
 const guesses  = ref<Guess[]>([])
@@ -54,11 +56,11 @@ function pickSlot(i: number) {
 
 function pickColor(c: number) {
   if (state.value !== 'playing' || selected.value === null) return
+  sfxClick()
   const arr = [...current.value]
   while (arr.length <= selected.value) arr.push(-1)
   arr[selected.value] = c
   current.value = arr
-  // auto advance
   const next = arr.findIndex((v, i) => i > selected.value! && v === -1)
   selected.value = next !== -1 ? next : arr.findIndex(v => v === -1)
   if (selected.value === -1) selected.value = null
@@ -73,10 +75,14 @@ function submit() {
   selected.value = null
   if (blacks === CODE_LEN) {
     score.value = guesses.value.length
+    sfxWin()
     state.value = 'won'
   } else if (guesses.value.length >= MAX_ROWS) {
     score.value = MAX_ROWS
+    sfxLose()
     state.value = 'over'
+  } else if (blacks > 0 || whites > 0) {
+    sfxCorrect()
   }
 }
 

@@ -24,6 +24,8 @@ let scorePopups: ScorePopup[] = []
 let shakeTimer = 0
 let titlePulse = 0
 
+const { score: sfxScore, die: sfxDie } = useGameSounds()
+
 function speed() { return Math.max(80, 150 - score.value * 3) }
 
 function reset() {
@@ -60,12 +62,14 @@ function step() {
     // Death shake + particles at head
     shakeTimer = 8
     spawnParticles(h.x * CELL + CELL / 2, h.y * CELL + CELL / 2, '#00d4ff')
+    sfxDie()
     state.value = 'over'
     return
   }
   snake.unshift(head)
   if (head.x === food.x && head.y === food.y) {
     score.value++
+    sfxScore()
     // Eat particles + popup
     spawnParticles(food.x * CELL + CELL / 2, food.y * CELL + CELL / 2, '#00ff88')
     scorePopups.push({ x: food.x * CELL + CELL / 2, y: food.y * CELL, vy: -0.7, age: 0, maxAge: 38, text: '+1' })

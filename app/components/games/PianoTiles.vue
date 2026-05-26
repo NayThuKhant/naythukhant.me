@@ -3,6 +3,8 @@ const W = 320, H = 480
 const COLS = 4
 const COL_W = W / COLS
 
+const { piano: sfxPiano, miss: sfxMiss, lose: sfxLose } = useGameSounds()
+
 const state  = ref<'idle' | 'playing' | 'over'>('idle')
 const score  = ref(0)
 const lives  = ref(3)
@@ -60,8 +62,9 @@ function draw(ts: number) {
 
     if (!tile.hit && !tile.missed && tile.y > HIT_ZONE_Y + tile.h) {
       tile.missed = true
+      sfxMiss()
       lives.value--
-      if (lives.value <= 0) { state.value = 'over'; cancelAnimationFrame(raf); return }
+      if (lives.value <= 0) { sfxLose(); state.value = 'over'; cancelAnimationFrame(raf); return }
     }
 
     const x = tile.col * COL_W
@@ -127,6 +130,7 @@ function hitTile(col: number) {
     if (t.col === col && !t.hit && !t.missed && t.y + t.h >= HIT_ZONE_Y - 20 && t.y <= HIT_ZONE_Y + t.h) {
       t.hit = true
       t.flashAge = 1
+      sfxPiano(col)
       score.value++
       return true
     }
@@ -160,6 +164,7 @@ function onKey(e: KeyboardEvent) {
 function restart() {
   reset()
   state.value = 'playing'
+  raf = requestAnimationFrame(draw)
 }
 
 onMounted(() => {

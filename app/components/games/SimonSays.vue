@@ -2,6 +2,8 @@
 const COLORS = ['#f472b6', '#00d4ff', '#00ff88', '#a855f7']
 const GLOWS  = ['#f472b6', '#00d4ff', '#00ff88', '#a855f7']
 
+const { simon: sfxSimon, correct: sfxCorrect, wrong: sfxWrong, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 const state = ref<'idle' | 'showing' | 'input' | 'over' | 'won'>('idle')
 const sequence = ref<number[]>([])
 const playerIdx = ref(0)
@@ -44,7 +46,9 @@ function playFrom(i: number) {
     return
   }
   after(300, () => {
-    activeIdx.value = sequence.value[i]!
+    const idx = sequence.value[i]!
+    activeIdx.value = idx
+    sfxSimon(idx)
     after(600, () => {
       activeIdx.value = null
       after(200, () => playFrom(i + 1))
@@ -58,14 +62,17 @@ function press(idx: number) {
   after(150, () => { activeIdx.value = null })
 
   if (sequence.value[playerIdx.value] !== idx) {
+    sfxWrong()
     score.value = round.value - 1
+    sfxLose()
     state.value = 'over'
     return
   }
   playerIdx.value++
   if (playerIdx.value === sequence.value.length) {
     score.value = round.value
-    if (round.value >= 20) { state.value = 'won'; return }
+    sfxCorrect()
+    if (round.value >= 20) { sfxWin(); state.value = 'won'; return }
     after(700, addAndPlay)
   }
 }

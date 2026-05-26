@@ -28,6 +28,8 @@ const WORD_LEN = 5
 type LetterState = 'correct' | 'present' | 'absent' | ''
 interface Row { letters: string[]; states: LetterState[] }
 
+const { click: sfxClick, correct: sfxCorrect, wrong: sfxWrong, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 const state    = ref<'idle' | 'playing' | 'won' | 'over'>('idle')
 const answer   = ref('')
 const rows     = ref<Row[]>([])
@@ -53,6 +55,7 @@ function press(key: string) {
   } else if (key === 'ENTER' || key === '↵') {
     submit()
   } else if (/^[A-Z]$/.test(key) && current.value.length < WORD_LEN) {
+    sfxClick()
     current.value += key
   }
 }
@@ -87,8 +90,12 @@ function submit() {
     if (cur !== 'correct') keyboard.value[k] = states[i]!
   }
 
-  if (guess === ans) { score.value = rows.value.length; state.value = 'won'; return }
-  if (rows.value.length >= MAX_GUESSES) { score.value = MAX_GUESSES; state.value = 'over' }
+  if (guess === ans) { score.value = rows.value.length; sfxWin(); state.value = 'won'; return }
+  const hasCorrect = states.some(s => s === 'correct')
+  const hasPresent = states.some(s => s === 'present')
+  if (hasCorrect) sfxCorrect()
+  else if (hasPresent) sfxWrong()
+  if (rows.value.length >= MAX_GUESSES) { score.value = MAX_GUESSES; sfxLose(); state.value = 'over' }
 }
 
 function doShake() {

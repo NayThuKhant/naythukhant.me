@@ -4,6 +4,8 @@ const CELL = 20
 const COLS = W / CELL, ROWS = H / CELL  // 24 x 26
 const τ = Math.PI * 2
 
+const { shoot: sfxShoot, pop: sfxPop, die: sfxDie, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 const state = ref<'idle' | 'playing' | 'over' | 'won'>('idle')
 const score = ref(0)
 const lives = ref(3)
@@ -70,8 +72,9 @@ function startGame() {
 
 function die() {
   lives.value--
+  sfxDie()
   spawnParticles(playerX, H - CELL, '#00d4ff', 12)
-  if (lives.value <= 0) { state.value = 'over'; cancelAnimationFrame(raf); return }
+  if (lives.value <= 0) { sfxLose(); state.value = 'over'; cancelAnimationFrame(raf); return }
   setTimeout(() => {
     playerX = W / 2
     bullets = []
@@ -80,7 +83,7 @@ function die() {
 
 function moveCentipede() {
   const alive = segments.filter(s => s.alive)
-  if (!alive.length) { state.value = 'won'; cancelAnimationFrame(raf); return }
+  if (!alive.length) { sfxWin(); state.value = 'won'; cancelAnimationFrame(raf); return }
 
   const head = alive[0]!
   let drop = false
@@ -155,6 +158,7 @@ function draw() {
     if (keys.right) playerX = Math.min(W - CELL/2, playerX + spd)
     if (keys.fire && shootCooldown <= 0) {
       bullets.push({ x: playerX, y: H - CELL * 1.5, alive: true })
+      sfxShoot()
       shootCooldown = 12
     }
     if (shootCooldown > 0) shootCooldown--
@@ -192,6 +196,7 @@ function draw() {
       if (!s.alive || !b.alive) continue
       if (Math.abs(b.x - (s.col * CELL + CELL/2)) < CELL/2 && Math.abs(b.y - (s.row * CELL + CELL/2)) < CELL/2) {
         s.alive = false; b.alive = false
+        sfxPop()
         score.value += i === 0 ? 100 : 10
         mushrooms.push({ col: s.col, row: s.row, hp: 4 })
         spawnParticles(s.col * CELL + CELL/2, s.row * CELL + CELL/2, '#a855f7', 8)

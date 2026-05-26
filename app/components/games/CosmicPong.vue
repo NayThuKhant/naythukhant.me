@@ -22,6 +22,8 @@ let particles: Particle[] = []
 let scorePopups: ScorePopup[] = []
 let titlePulse = 0
 
+const { bounce: sfxBounce, score: sfxScore, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 function spawnParticles(x: number, y: number, color: string) {
   for (let i = 0; i < 8; i++) {
     const angle = (τ / 8) * i + Math.random() * 0.3
@@ -49,10 +51,14 @@ function onScore(who: 'player' | 'cpu') {
   spawnParticles(bx, by, who === 'player' ? '#00d4ff' : '#f472b6')
   scorePopups.push({ x: who === 'player' ? W * 0.75 : W * 0.25, y: H / 2 - 20, vy: -0.8, age: 0, maxAge: 45, text: '+1' })
 
+  sfxScore()
   if (who === 'player') playerScore.value++
   else cpuScore.value++
   const target = who === 'player' ? playerScore.value : cpuScore.value
-  if (target >= WIN_SCORE) { state.value = 'over'; winner.value = who } else launch()
+  if (target >= WIN_SCORE) {
+    state.value = 'over'; winner.value = who
+    if (who === 'player') sfxWin(); else sfxLose()
+  } else launch()
 }
 
 function frame(ts: number) {
@@ -80,8 +86,8 @@ function frame(ts: number) {
 
     bx += bvx; by += bvy
 
-    if (by <= 5)       { by = 5;       bvy =  Math.abs(bvy) }
-    if (by >= H - 5)   { by = H - 5;   bvy = -Math.abs(bvy) }
+    if (by <= 5)       { by = 5;       bvy =  Math.abs(bvy); sfxBounce() }
+    if (by >= H - 5)   { by = H - 5;   bvy = -Math.abs(bvy); sfxBounce() }
 
     // Player paddle — hit flash particles
     if (bx - 5 <= PAD_M + PAD_W && bx >= PAD_M && by >= py && by <= py + PAD_H) {
@@ -89,6 +95,7 @@ function frame(ts: number) {
       bvy += ((by - (py + PAD_H / 2)) / (PAD_H / 2)) * 3.5
       bspd = Math.min(11, bspd + 0.35)
       normalize()
+      sfxBounce()
       spawnParticles(PAD_M + PAD_W, by, '#00d4ff')
     }
     // CPU paddle
@@ -97,6 +104,7 @@ function frame(ts: number) {
       bvy += ((by - (cy + PAD_H / 2)) / (PAD_H / 2)) * 3.5
       bspd = Math.min(11, bspd + 0.35)
       normalize()
+      sfxBounce()
       spawnParticles(W - PAD_M - PAD_W, by, '#f472b6')
     }
 

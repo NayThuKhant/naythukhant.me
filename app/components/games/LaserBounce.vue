@@ -48,6 +48,8 @@ let lastTs   = 0
 let particles: Particle[] = []
 let popups: ScorePopup[] = []
 
+const { shoot: sfxShoot, score: sfxScore, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 function clamp(v: number, lo: number, hi: number) { return Math.max(lo, Math.min(hi, v)) }
 
 function spawnParticles(x: number, y: number, color: string, n = 7) {
@@ -149,6 +151,7 @@ function previewPath(startX: number, startY: number, angle: number): LaserSeg[] 
 function fireLaser() {
   if (shots.value <= 0 || state.value !== 'playing') return
   shots.value--
+  sfxShoot()
   const vx = Math.cos(aimAngle) * LASER_SPEED
   const vy = Math.sin(aimAngle) * LASER_SPEED
   activeLasers.push({
@@ -223,6 +226,7 @@ function updateLaser(laser: ActiveLaser) {
         t.flashFrames = 12
         t.alive = false
         score.value++
+        sfxScore()
         // Burst of pink particles + popup on target hit
         spawnParticles(t.x, t.y, '#f472b6', 8)
         spawnPopup(t.x, t.y - 20, '+1')
@@ -388,11 +392,13 @@ function frame(ts: number) {
 
     const alive = targets.filter(t => t.alive)
     if (alive.length === 0) {
+      sfxWin()
       nextLevel()
       return
     }
     if (shots.value <= 0 && activeLasers.length === 0) {
       state.value = 'over'
+      sfxLose()
     }
   }
 

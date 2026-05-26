@@ -2,13 +2,18 @@
 const COLS = 7
 const ROWS = 6
 
+const { drop: sfxDrop, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 type Cell = 0 | 1 | 2
-const state  = ref<'idle' | 'playing' | 'won' | 'over' | 'draw'>('idle')
-const board  = ref<Cell[][]>([])
-const moves  = ref(0)
-const score  = ref(0)
-const hover  = ref<number | null>(null)
+const state   = ref<'idle' | 'playing' | 'won' | 'over' | 'draw'>('idle')
+const board   = ref<Cell[][]>([])
+const moves   = ref(0)
+const score   = ref(0)
+const hover   = ref<number | null>(null)
 const cpuBusy = ref(false)
+const winCells = ref<[number,number][]>([])
+
+const winSet = computed(() => new Set(winCells.value.map(([r,c]) => `${r},${c}`)))
 
 function makeBoard(): Cell[][] {
   return Array.from({ length: ROWS }, () => Array(COLS).fill(0) as Cell[])
@@ -19,23 +24,27 @@ function dropRow(b: Cell[][], col: number): number {
   return -1
 }
 
-function checkWin(b: Cell[][], player: Cell): boolean {
+function getWinCells(b: Cell[][], player: Cell): [number,number][] {
   const dirs = [[0,1],[1,0],[1,1],[1,-1]] as const
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (b[r]![c] !== player) continue
       for (const [dr, dc] of dirs) {
-        let cnt = 1
+        const cells: [number,number][] = [[r,c]]
         for (let k = 1; k < 4; k++) {
           const nr = r + dr * k, nc = c + dc * k
           if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || b[nr]![nc] !== player) break
-          cnt++
+          cells.push([nr, nc])
         }
-        if (cnt >= 4) return true
+        if (cells.length >= 4) return cells
       }
     }
   }
-  return false
+  return []
+}
+
+function checkWin(b: Cell[][], player: Cell): boolean {
+  return getWinCells(b, player).length >= 4
 }
 
 function scoreWindow(window: Cell[], player: Cell): number {
@@ -110,6 +119,7 @@ function cpuPick(b: Cell[][]): number {
 function startGame() {
   board.value = makeBoard()
   moves.value = 0
+  winCells.value = []
   cpuBusy.value = false
   state.value = 'playing'
 }
@@ -123,8 +133,15 @@ async function drop(col: number) {
   b[r]![col] = 1
   moves.value++
   board.value = b
+  sfxDrop()
 
-  if (checkWin(b, 1)) { score.value = moves.value; state.value = 'won'; return }
+  if (checkWin(b, 1)) {
+    winCells.value = getWinCells(b, 1)
+    score.value = moves.value
+    sfxWin()
+    setTimeout(() => { state.value = 'won' }, 1200)
+    return
+  }
   if (!b[0]!.some((_, c) => dropRow(b, c) !== -1)) { state.value = 'draw'; return }
 
   cpuBusy.value = true
@@ -138,11 +155,16 @@ async function drop(col: number) {
   board.value = nb
   cpuBusy.value = false
 
-  if (checkWin(nb, 2)) { state.value = 'over'; return }
+  if (checkWin(nb, 2)) {
+    winCells.value = getWinCells(nb, 2)
+    sfxLose()
+    setTimeout(() => { state.value = 'over' }, 1200)
+    return
+  }
   if (!nb[0]!.some((_, c) => dropRow(nb, c) !== -1)) { state.value = 'draw' }
 }
 
-function restart() { startGame() }
+function restart() { winCells.value = []; startGame() }
 </script>
 
 <template>
@@ -197,8 +219,9 @@ function restart() { startGame() }
             class="w-10 h-10 rounded-full border transition-all duration-200 cursor-pointer focus:outline-none"
             :class="{
               'border-slate-700 bg-slate-800': cell === 0,
-              'border-blue-400 bg-neon-blue shadow-[0_0_10px_#00d4ff]': cell === 1,
-              'border-pink-400 bg-neon-pink shadow-[0_0_10px_#f472b6]': cell === 2,
+              'border-blue-400 bg-neon-blue shadow-[0_0_10px_#00d4ff]': cell === 1 && !winSet.has(`${r},${c}`),
+              'border-pink-400 bg-neon-pink shadow-[0_0_10px_#f472b6]': cell === 2 && !winSet.has(`${r},${c}`),
+              'border-yellow-400 bg-yellow-400 shadow-[0_0_20px_#facc15] scale-110 animate-pulse': winSet.has(`${r},${c}`),
               'border-blue-500/40 bg-blue-900/20': cell === 0 && hover === c,
             }"
             @mouseenter="hover = c"

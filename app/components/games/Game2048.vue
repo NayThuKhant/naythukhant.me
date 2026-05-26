@@ -68,6 +68,8 @@ let animating  = false
 let raf        = 0
 let startTs    = 0
 
+const { move: sfxMove, score: sfxScore, win: sfxWin, lose: sfxLose } = useGameSounds()
+
 // ─── Color palette ────────────────────────────────────────────────────────────
 function tileColor(v: number): { bg: string; fg: string; glow: string } {
   const map: Record<number, { bg: string; fg: string; glow: string }> = {
@@ -170,7 +172,7 @@ function rotateCW(b: Board): Board {
 // ─── Win / lose check ────────────────────────────────────────────────────────
 function checkWinLose() {
   if (gameState.value !== 'playing') return
-  if (tileList.some(t => t.value === 2048)) { gameState.value = 'won'; return }
+  if (tileList.some(t => t.value === 2048)) { gameState.value = 'won'; sfxWin(); return }
   const b: Board = emptyBoard()
   for (const t of tileList) b[t.row]![t.col] = { id: t.id, value: t.value }
   const hasMove = b.some((row, r) =>
@@ -180,7 +182,7 @@ function checkWinLose() {
       (r + 1 < GRID && b[r + 1]?.[c]?.value === cell.value)
     )
   )
-  if (!hasMove) gameState.value = 'over'
+  if (!hasMove) { gameState.value = 'over'; sfxLose() }
 }
 
 // ─── Move ─────────────────────────────────────────────────────────────────────
@@ -206,6 +208,7 @@ function move(dir: Dir) {
     if (JSON.stringify(b[r]) !== before) moved = true
   }
   if (!moved) { checkWinLose(); return }
+  sfxMove()
 
   for (let i = 0; i < (4 - rots) % 4; i++) b = rotateCW(b)
 
@@ -249,6 +252,7 @@ function move(dir: Dir) {
   }
 
   // Score + popup
+  if (gained > 0) sfxScore()
   score.value += gained
   if (score.value > best.value) best.value = score.value
   if (gained > 0) {
