@@ -35,7 +35,7 @@ const lives = ref(3)
 let raf = 0
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 
-let maze: number[][]
+let maze: number[][] = MAZE_TEMPLATE.map(r => [...r])
 interface Ghost { col: number; row: number; dir: [number,number]; scared: boolean; scaredTimer: number; color: string }
 let pac = { col: 10, row: 16, dir: [1,0] as [number,number], nextDir: [1,0] as [number,number], mouthAngle: 0, mouthOpen: true }
 let ghosts: Ghost[] = []
